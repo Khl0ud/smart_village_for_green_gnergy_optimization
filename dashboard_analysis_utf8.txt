@@ -1,0 +1,5 @@
+﻿Analyzing dashboard.dart...                                     
+
+  error - The constructor being called isn't a const constructor - lib\features\settings\dashboard.dart:103:57 - const_with_non_const
+  error - The returned type 'ParkingScreen' isn't returnable from a 'Widget' function, as required by the closure's context - lib\features\settings\dashboard.dart:103:57 - return_of_invalid_type_from_closure
+

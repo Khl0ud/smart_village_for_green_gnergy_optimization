@@ -1,0 +1,353 @@
+﻿Analyzing smart_village_for_green_gnergy_optimization...        
+
+   info - The file name 'AppColors.dart' isn't a lower_case_with_underscores identifier - lib\core\theme\AppColors.dart:1:1 - file_names
+   info - The file name 'HomeDashboardPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Camera\HomeDashboardPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Camera\HomeDashboardPage.dart:4:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:150:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:189:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:191:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:198:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:245:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:254:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:255:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:359:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\HomeDashboardPage.dart:368:46 - deprecated_member_use
+   info - The file name 'MainShell.dart' isn't a lower_case_with_underscores identifier - lib\features\Camera\MainShell.dart:1:1 - file_names
+   info - The file name 'ReportsPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Camera\ReportsPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Camera\ReportsPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\ReportsPage.dart:106:23 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\ReportsPage.dart:182:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\ReportsPage.dart:184:46 - deprecated_member_use
+   info - The file name 'SurveillanceGridPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Camera\SurveillanceGridPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Camera\SurveillanceGridPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\SurveillanceGridPage.dart:132:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\SurveillanceGridPage.dart:157:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\SurveillanceGridPage.dart:158:36 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Camera\gate_logs_page.dart:2:8 - unnecessary_import
+   info - Unnecessary use of multiple underscores - lib\features\Camera\gate_logs_page.dart:65:41 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\gate_logs_page.dart:85:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\gate_logs_page.dart:128:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\gate_logs_page.dart:130:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\gate_logs_page.dart:141:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\gate_logs_page.dart:141:105 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\shared_widgets.dart:29:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\shared_widgets.dart:72:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Camera\shared_widgets.dart:75:46 - deprecated_member_use
+   info - The file name 'FindMyCarPageState.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\FindMyCarPageState.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\FindMyCarPageState.dart:135:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\FindMyCarPageState.dart:204:37 - deprecated_member_use
+   info - The file name 'MakeReservationPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\MakeReservationPage.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\MakeReservationPage.dart:100:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\MakeReservationPage.dart:199:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\MakeReservationPage.dart:204:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\MakeReservationPage.dart:218:29 - deprecated_member_use
+   info - The file name 'ParkingDashboardPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\ParkingDashboardPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Parking\ParkingDashboardPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingDashboardPage.dart:103:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingDashboardPage.dart:210:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingDashboardPage.dart:218:70 - deprecated_member_use
+   info - The file name 'ParkingScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\ParkingScreen.dart:1:1 - file_names
+   info - The file name 'ParkingSettingsPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\ParkingSettingsPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Parking\ParkingSettingsPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:126:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:138:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:153:49 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Parking\ParkingSettingsPage.dart:160:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:166:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:176:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSettingsPage.dart:181:54 - deprecated_member_use
+   info - The file name 'ParkingSpacePage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\ParkingSpacePage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Parking\ParkingSpacePage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSpacePage.dart:132:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSpacePage.dart:147:108 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ParkingSpacePage.dart:158:42 - deprecated_member_use
+   info - The file name 'PaymentWalletPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\PaymentWalletPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Parking\PaymentWalletPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\PaymentWalletPage.dart:96:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\PaymentWalletPage.dart:137:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\PaymentWalletPage.dart:164:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\PaymentWalletPage.dart:222:33 - deprecated_member_use
+   info - The file name 'ShowReservationsPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\ShowReservationsPage.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:148:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:157:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:159:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:195:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:222:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:224:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:245:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:255:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\ShowReservationsPage.dart:257:41 - deprecated_member_use
+   info - The file name 'StatCard.dart' isn't a lower_case_with_underscores identifier - lib\features\Parking\StatCard.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Parking\StatCard.dart:28:33 - deprecated_member_use
+   info - The file name 'SecurityPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Security\SecurityPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Security\SecurityPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Security\SecurityPage.dart:95:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Security\SecurityPage.dart:138:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Security\SecurityPage.dart:140:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Security\security_sub_pages.dart:83:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Security\security_sub_pages.dart:94:52 - deprecated_member_use
+   info - The file name 'DoorControlPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\DoorControlPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\DoorControlPage.dart:2:8 - unnecessary_import
+   info - Parameter 'key' could be a super parameter - lib\features\Smart Home\DoorControlPage.dart:8:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\DoorControlPage.dart:77:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\DoorControlPage.dart:79:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\DoorControlPage.dart:115:33 - deprecated_member_use
+   info - The file name 'FanControlPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\FanControlPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\FanControlPage.dart:2:8 - unnecessary_import
+   info - Parameter 'key' could be a super parameter - lib\features\Smart Home\FanControlPage.dart:8:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\FanControlPage.dart:89:33 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Smart Home\FanControlPage.dart:113:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\FanControlPage.dart:127:33 - deprecated_member_use
+   info - The file name 'GasSafetyPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\GasSafetyPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\GasSafetyPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\GasSafetyPage.dart:77:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\GasSafetyPage.dart:79:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\GasSafetyPage.dart:95:33 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Smart Home\GasSafetyPage.dart:105:9 - deprecated_member_use
+   info - The file name 'HomePage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\HomePage.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:88:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:104:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:107:68 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Smart Home\HomePage.dart:132:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:144:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:148:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:196:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:224:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\HomePage.dart:233:54 - deprecated_member_use
+   info - The file name 'LightingControlPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\LightingControlPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\LightingControlPage.dart:2:8 - unnecessary_import
+   info - Parameter 'key' could be a super parameter - lib\features\Smart Home\LightingControlPage.dart:8:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\LightingControlPage.dart:89:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\LightingControlPage.dart:110:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\LightingControlPage.dart:110:82 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\LightingControlPage.dart:113:47 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Smart Home\LightingControlPage.dart:126:17 - deprecated_member_use
+   info - The file name 'SmartHomeDashboard.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\SmartHomeDashboard.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\SmartHomeDashboard.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\SmartHomeDashboard.dart:35:35 - deprecated_member_use
+   info - The file name 'ValveControlPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Home\ValveControlPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Home\ValveControlPage.dart:2:8 - unnecessary_import
+   info - Parameter 'key' could be a super parameter - lib\features\Smart Home\ValveControlPage.dart:9:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Home\ValveControlPage.dart:96:33 - deprecated_member_use
+   info - The file name 'ControlScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\ControlScreen.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\ControlScreen.dart:139:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\ControlScreen.dart:187:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\ControlScreen.dart:224:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\ControlScreen.dart:271:33 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Smart Irrigation\ControlScreen.dart:315:7 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\ControlScreen.dart:345:33 - deprecated_member_use
+   info - The file name 'IrrigationHistoryScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:111:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:114:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:136:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:136:85 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\IrrigationHistoryScreen.dart:170:74 - deprecated_member_use
+   info - The file name 'SettingsScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\SettingsScreen.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SettingsScreen.dart:74:65 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SettingsScreen.dart:133:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SettingsScreen.dart:197:33 - deprecated_member_use
+   info - The file name 'SmartFarming.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\SmartFarming.dart:1:1 - file_names
+   info - The file name 'SmartIrrigationPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\SmartIrrigationPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Irrigation\SmartIrrigationPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SmartIrrigationPage.dart:106:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SmartIrrigationPage.dart:129:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\SmartIrrigationPage.dart:229:30 - deprecated_member_use
+   info - The file name 'WeatherScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Smart Irrigation\WeatherScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Smart Irrigation\WeatherScreen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:134:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:181:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:222:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:222:83 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:224:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Smart Irrigation\WeatherScreen.dart:231:82 - deprecated_member_use
+   info - The file name 'SolarDashboard.dart' isn't a lower_case_with_underscores identifier - lib\features\Solar Power\SolarDashboard.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Solar Power\SolarDashboard.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarDashboard.dart:118:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarDashboard.dart:153:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarDashboard.dart:184:33 - deprecated_member_use
+   info - The file name 'SolarHistoryScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Solar Power\SolarHistoryScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Solar Power\SolarHistoryScreen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarHistoryScreen.dart:114:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarHistoryScreen.dart:189:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarHistoryScreen.dart:206:30 - deprecated_member_use
+   info - The file name 'SolarSettingsScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Solar Power\SolarSettingsScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Solar Power\SolarSettingsScreen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarSettingsScreen.dart:61:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarSettingsScreen.dart:141:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarSettingsScreen.dart:164:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarSettingsScreen.dart:227:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Solar Power\SolarSettingsScreen.dart:229:59 - deprecated_member_use
+   info - The file name 'UmbrellaControlPage.dart' isn't a lower_case_with_underscores identifier - lib\features\Umbrella\UmbrellaControlPage.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:119:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:145:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:145:83 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:149:72 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:168:33 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Umbrella\UmbrellaControlPage.dart:188:17 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:247:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaControlPage.dart:249:57 - deprecated_member_use
+   info - The file name 'UmbrellaSettings.dart' isn't a lower_case_with_underscores identifier - lib\features\Umbrella\UmbrellaSettings.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Umbrella\UmbrellaSettings.dart:2:8 - unnecessary_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\Umbrella\UmbrellaSettings.dart:74:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Umbrella\UmbrellaSettings.dart:173:33 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\Umbrella\UmbrellaSettings.dart:219:11 - curly_braces_in_flow_control_structures
+   info - The file name 'BinLevelsScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Waste Management\BinLevelsScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Waste Management\BinLevelsScreen.dart:1:8 - unnecessary_import
+   info - Unnecessary use of multiple underscores - lib\features\Waste Management\BinLevelsScreen.dart:92:31 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\BinLevelsScreen.dart:113:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\BinLevelsScreen.dart:142:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\BinLevelsScreen.dart:187:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\BinLevelsScreen.dart:198:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\BinLevelsScreen.dart:200:41 - deprecated_member_use
+   info - The file name 'CollectionRequestScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Waste Management\CollectionRequestScreen.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\CollectionRequestScreen.dart:152:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\CollectionRequestScreen.dart:195:29 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\Waste Management\CollectionRequestScreen.dart:199:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\CollectionRequestScreen.dart:236:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\CollectionRequestScreen.dart:240:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\CollectionRequestScreen.dart:241:32 - deprecated_member_use
+   info - The file name 'DashboardScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Waste Management\DashboardScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Waste Management\DashboardScreen.dart:1:8 - unnecessary_import
+   info - Unnecessary use of multiple underscores - lib\features\Waste Management\DashboardScreen.dart:142:31 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\DashboardScreen.dart:190:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\DashboardScreen.dart:324:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\DashboardScreen.dart:380:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\DashboardScreen.dart:382:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\DashboardScreen.dart:394:32 - deprecated_member_use
+   info - The file name 'MapScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\Waste Management\MapScreen.dart:1:1 - file_names
+   info - The imported package 'flutter_map' isn't a dependency of the importing package - lib\features\Waste Management\MapScreen.dart:2:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:flutter_map/flutter_map.dart' - lib\features\Waste Management\MapScreen.dart:2:8 - uri_does_not_exist
+   info - The imported package 'latlong2' isn't a dependency of the importing package - lib\features\Waste Management\MapScreen.dart:3:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:latlong2/latlong.dart' - lib\features\Waste Management\MapScreen.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'MapController' - lib\features\Waste Management\MapScreen.dart:17:9 - undefined_class
+  error - The method 'MapController' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:17:40 - undefined_method
+  error - The name 'Marker' isn't a type, so it can't be used as a type argument - lib\features\Waste Management\MapScreen.dart:20:14 - non_type_as_type_argument
+  error - The method 'Marker' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:21:5 - undefined_method
+  error - The name 'LatLng' isn't a class - lib\features\Waste Management\MapScreen.dart:24:20 - creation_with_non_type
+  error - The method 'Marker' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:27:5 - undefined_method
+  error - The name 'LatLng' isn't a class - lib\features\Waste Management\MapScreen.dart:30:20 - creation_with_non_type
+  error - The method 'Marker' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:33:5 - undefined_method
+  error - The name 'LatLng' isn't a class - lib\features\Waste Management\MapScreen.dart:36:20 - creation_with_non_type
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\MapScreen.dart:54:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\MapScreen.dart:116:33 - deprecated_member_use
+  error - The method 'FlutterMap' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:124:16 - undefined_method
+  error - The name 'MapOptions' isn't a class - lib\features\Waste Management\MapScreen.dart:126:26 - creation_with_non_type
+  error - The method 'LatLng' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:127:28 - undefined_method
+  error - The method 'TileLayer' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:131:13 - undefined_method
+  error - The method 'MarkerLayer' isn't defined for the type '_MapScreenState' - lib\features\Waste Management\MapScreen.dart:165:13 - undefined_method
+  error - The name 'LatLng' isn't a class - lib\features\Waste Management\MapScreen.dart:218:45 - creation_with_non_type
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\MapScreen.dart:246:33 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\Waste Management\waste_main.dart:1:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\waste_main.dart:111:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\waste_main.dart:154:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\waste_main.dart:208:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\Waste Management\waste_main.dart:210:45 - deprecated_member_use
+   info - The file name 'AboutUsPage .dart' isn't a lower_case_with_underscores identifier - lib\features\about\AboutUsPage .dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\AboutUsPage .dart:89:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_1_page.dart:98:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_1_page.dart:140:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_1_page.dart:142:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_1_page.dart:183:23 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_1_page.dart:185:42 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\about\about_us_2_page.dart:112:39 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_2_page.dart:130:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_2_page.dart:168:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\about\about_us_2_page.dart:170:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\help_support\help_support_page.dart:95:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\help_support\help_support_page.dart:138:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\help_support\help_support_page.dart:140:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\help_support\help_support_page.dart:201:41 - deprecated_member_use
+   info - The file name 'CustomerServicePage.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\CustomerServicePage.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\CustomerServicePage.dart:101:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\CustomerServicePage.dart:112:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\CustomerServicePage.dart:139:52 - deprecated_member_use
+   info - The file name 'Dashboard.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\Dashboard.dart:1:1 - file_names
+   info - The file name 'IntegrationPage.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\IntegrationPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\IntegrationPage.dart:3:8 - unnecessary_import
+   info - Unnecessary use of multiple underscores - lib\features\settings\IntegrationPage.dart:98:39 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\IntegrationPage.dart:115:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\IntegrationPage.dart:152:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\IntegrationPage.dart:154:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\IntegrationPage.dart:163:31 - deprecated_member_use
+   info - The file name 'LoginScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\LoginScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\LoginScreen.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\LoginScreen.dart:164:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\LoginScreen.dart:213:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\LoginScreen.dart:241:42 - deprecated_member_use
+   info - The file name 'MainShell.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\MainShell.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\MainShell.dart:40:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\MainShell.dart:50:45 - deprecated_member_use
+   info - The file name 'PreferencesPage.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\PreferencesPage.dart:1:1 - file_names
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\settings\PreferencesPage.dart:102:21 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\PreferencesPage.dart:103:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\PreferencesPage.dart:129:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\PreferencesPage.dart:182:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\PreferencesPage.dart:184:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\PreferencesPage.dart:246:41 - deprecated_member_use
+   info - The file name 'ProfileScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\ProfileScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\ProfileScreen.dart:3:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:83:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:85:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:122:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:159:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:196:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:196:84 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ProfileScreen.dart:199:59 - deprecated_member_use
+   info - The file name 'ResetPasswordScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\ResetPasswordScreen.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\ResetPasswordScreen.dart:3:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:90:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:92:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:107:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:200:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:202:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:227:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\ResetPasswordScreen.dart:265:44 - deprecated_member_use
+   info - The file name 'SettingsPage.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\SettingsPage.dart:1:1 - file_names
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\SettingsPage.dart:2:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SettingsPage.dart:143:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SettingsPage.dart:152:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SettingsPage.dart:179:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SettingsPage.dart:214:33 - deprecated_member_use
+   info - The file name 'SignUpScreen.dart' isn't a lower_case_with_underscores identifier - lib\features\settings\SignUpScreen.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SignUpScreen.dart:31:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SignUpScreen.dart:104:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\SignUpScreen.dart:157:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:85:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:133:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:140:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:141:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:165:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:167:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\chat_page.dart:232:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:142:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:143:54 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\settings\neighbors_page.dart:169:55 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\settings\neighbors_page.dart:170:14 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:177:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:179:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:267:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\neighbors_page.dart:307:53 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\notifications_page.dart:3:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\notifications_page.dart:105:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\notifications_page.dart:120:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\notifications_page.dart:127:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\notifications_page.dart:161:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\notifications_page.dart:171:44 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\settings\profile_screen.dart:3:8 - unnecessary_import
+   info - Parameter 'key' could be a super parameter - lib\features\settings\profile_screen.dart:8:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:105:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:107:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:123:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:163:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:200:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:200:84 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\profile_screen.dart:203:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:125:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:142:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:145:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:176:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:178:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:184:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\settings\sos_page.dart:201:59 - deprecated_member_use
+
