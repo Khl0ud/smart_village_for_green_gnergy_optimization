@@ -7,7 +7,6 @@ import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_color
 import 'features/settings/SettingsPage.dart';
 import 'features/settings/ProfileScreen.dart';
 import 'features/settings/notifications_page.dart';
-import 'features/settings/neighbors_page.dart';
 import 'features/settings/sos_page.dart';
 import 'features/settings/IntegrationPage.dart';
 import 'features/settings/splash_screen.dart';
@@ -69,7 +68,6 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsPage(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsPage(),
-        '/neighbors': (context) => const NeighborsPage(),
         '/sos': (context) => const SOS(),
         '/integration': (context) => const IntegrationPage(),
 

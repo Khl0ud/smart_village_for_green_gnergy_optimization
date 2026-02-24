@@ -1,37 +1,66 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية
+// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية لمشروعكِ
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 
-class WeatherScreen extends StatelessWidget {
-  // اسم المسار للربط في ملف main.dart والداشبورد
-  static const String routeName = '/weather_forecast';
-
+class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
+
+  @override
+  State<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends State<WeatherScreen> {
+  // بيانات حقيقية قادمة من حساسات الـ ESP32
+  int rainPercent = 45; // القيمة المستلمة من متغير rainPercent في كود Arduino
+  double temp = 23.0;   // القيمة المستلمة من حساس DHT11
+  int humidity = 60;    // القيمة المستلمة من حساس DHT11
+
+  // دالة لتحديد وصف حالة المطر بناءً على النسبة المئوية للحساس
+  String _getRainDescription(int percent) {
+    if (percent <= 5) return "Clear Sky";
+    if (percent < 30) return "Light Drizzle";
+    if (percent < 70) return "Moderate Rain";
+    return "Heavy Storm";
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة من ملفك
+      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة
       body: Stack(
         children: [
           _buildBackgroundGradient(),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: 10),
-                _buildCurrentWeather(),
-                const SizedBox(height: 35),
-                _buildSectionTitle("7-Day Forecast"),
-                const SizedBox(height: 15),
-                _buildForecastList(),
-                const SizedBox(height: 25),
-                _buildAirQualityCard(),
-                const SizedBox(height: 15),
-                _buildWeatherDetailsGrid(),
-              ],
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildHeader(context),
+                  const SizedBox(height: 10),
+                  
+                  // عرض الموقع والحرارة الحقيقية من DHT11
+                  const Text("Asyut, Garden Area", style: TextStyle(color: AppColors.textLight, fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 5),
+                  Text("${temp.toInt()}°", style: const TextStyle(color: AppColors.textLight, fontSize: 64, fontWeight: FontWeight.w200)),
+                  Text(_getRainDescription(rainPercent), style: const TextStyle(color: AppColors.textGrey, fontSize: 18)),
+
+                  const SizedBox(height: 40),
+                  _buildSectionTitle("Live Garden Sensors"),
+                  const SizedBox(height: 20),
+
+                  // كارت شدة المطر اللحظي (Local Rain Intensity)
+                  _buildRainIntensityCard(),
+
+                  const SizedBox(height: 25),
+                  
+                  // شبكة المعلومات البيئية الإضافية
+                  _buildEnvironmentalGrid(),
+                  const SizedBox(height: 50),
+                ],
+              ),
             ),
           ),
         ],
@@ -43,196 +72,100 @@ class WeatherScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: AppColors.mainGradient, // استخدام التدرج الموحد من ملفك
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: AppColors.mainGradient,
         ),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textLight, size: 22),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const Text(
-            "Weather Forecast",
-            style: TextStyle(color: AppColors.textLight, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurrentWeather() {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "Asyut, Egypt",
-          style: TextStyle(color: AppColors.textGrey, fontSize: 16, letterSpacing: 1.2),
+        IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textLight, size: 22),
+          onPressed: () => Navigator.pop(context),
         ),
-        const SizedBox(height: 5),
-        const Text(
-          "23°C",
-          style: TextStyle(color: AppColors.textLight, fontSize: 64, fontWeight: FontWeight.w900),
-        ),
-        const Text(
-          "Partly Cloudy",
-          style: TextStyle(color: AppColors.primaryNeon, fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          "H:24°  L:18°",
-          style: TextStyle(color: AppColors.textGrey, fontSize: 16),
+        const CircleAvatar(
+          backgroundColor: AppColors.cardBg,
+          child: Icon(Icons.sensors_rounded, color: AppColors.primaryNeon, size: 20),
         ),
       ],
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: const TextStyle(color: AppColors.textLight, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildForecastList() {
-    return SizedBox(
-      height: 140,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        physics: const BouncingScrollPhysics(),
-        children: const [
-          ForecastCard(day: "Mon", temp: "19°", icon: Icons.wb_cloudy_rounded, active: true),
-          ForecastCard(day: "Tue", temp: "18°", icon: Icons.ac_unit_rounded),
-          ForecastCard(day: "Wed", temp: "18°", icon: Icons.wb_sunny_rounded),
-          ForecastCard(day: "Thu", temp: "19°", icon: Icons.cloud_queue_rounded),
-          ForecastCard(day: "Fri", temp: "20°", icon: Icons.wb_cloudy_rounded),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAirQualityCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.cardBg.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: AppColors.cardBorder),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.air_rounded, color: AppColors.primaryNeon, size: 24),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("AIR QUALITY", style: TextStyle(color: AppColors.textGrey, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                Text("3 - Low Health Risk", style: TextStyle(color: AppColors.textLight, fontSize: 16, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textGrey, size: 14),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeatherDetailsGrid() {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          childAspectRatio: 1.4,
-          children: [
-            _buildGridDetail("SUNRISE", "5:28 AM", Icons.wb_twilight_rounded, subtitle: "Sunset: 7:25 PM"),
-            _buildGridDetail("UV INDEX", "4 Moderate", Icons.wb_sunny_rounded),
-            _buildGridDetail("HUMIDITY", "60%", Icons.water_drop_rounded),
-            _buildGridDetail("WIND", "12 km/h", Icons.air_rounded),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGridDetail(String title, String value, IconData icon, {String? subtitle}) {
+  // كارت يعرض شدة المطر بناءً على قراءة rainPercent من الحساس
+  Widget _buildRainIntensityCard() {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.cardBg.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: AppColors.primaryNeon, size: 16),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(color: AppColors.textGrey, fontSize: 10, fontWeight: FontWeight.bold)),
+              const Text("RAIN INTENSITY", style: TextStyle(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.bold)),
+              Icon(Icons.umbrella_rounded, color: rainPercent > 10 ? AppColors.info : AppColors.textGrey, size: 20),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: AppColors.textLight, fontSize: 16, fontWeight: FontWeight.bold)),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: AppColors.textGrey, fontSize: 10)),
-          ],
+          const SizedBox(height: 20),
+          LinearProgressIndicator(
+            value: rainPercent / 100,
+            backgroundColor: Colors.white10,
+            color: AppColors.info, // استخدام اللون الأزرق للمطر
+            minHeight: 12,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text("$rainPercent%", style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
   }
-}
 
-class ForecastCard extends StatelessWidget {
-  final String day;
-  final String temp;
-  final IconData icon;
-  final bool active;
+  Widget _buildEnvironmentalGrid() {
+    return Row(
+      children: [
+        Expanded(child: _buildSmallInfoCard("HUMIDITY", "$humidity%", Icons.water_drop_rounded, AppColors.info)),
+        const SizedBox(width: 15),
+        Expanded(child: _buildSmallInfoCard("AIR QUALITY", "Low Risk", Icons.air_rounded, AppColors.primaryNeon)),
+      ],
+    );
+  }
 
-  const ForecastCard({super.key, required this.day, required this.temp, required this.icon, this.active = false});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSmallInfoCard(String title, String val, IconData icon, Color color) {
     return Container(
-      width: 80,
-      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: active ? AppColors.primaryNeon.withOpacity(0.1) : AppColors.cardBg.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: active ? AppColors.primaryNeon.withOpacity(0.3) : AppColors.cardBorder),
+        color: AppColors.cardBg.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(day, style: TextStyle(color: active ? AppColors.textLight : AppColors.textGrey, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Icon(icon, color: active ? AppColors.primaryNeon : AppColors.textLight.withOpacity(0.7), size: 28),
-          const SizedBox(height: 10),
-          Text(temp, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold, fontSize: 16)),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 12),
+          Text(title, style: const TextStyle(color: AppColors.textGrey, fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 5),
+          Text(val, style: const TextStyle(color: AppColors.textLight, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(title, style: const TextStyle(color: AppColors.textLight, fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }
 }

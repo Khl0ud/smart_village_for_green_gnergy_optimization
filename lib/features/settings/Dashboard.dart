@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-// 1. استيراد ملف الألوان المركزي من مجلد core
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-
-// 2. استيراد الصفحات الرئيسية من مجلد features لربطها بالـ Grid
 import 'package:smart_village_for_green_gnergy_optimization/features/settings/sos_page.dart';
-
-import 'package:smart_village_for_green_gnergy_optimization/features/Smart Irrigation/ControlScreen.dart';
+import 'package:smart_village_for_green_gnergy_optimization/features/Smart Irrigation/SmartIrrigationHub.dart';
 import 'package:smart_village_for_green_gnergy_optimization/features/Solar Power/SolarDashboard.dart';
 import 'package:smart_village_for_green_gnergy_optimization/features/waste_management/waste_main.dart';
 import 'package:smart_village_for_green_gnergy_optimization/features/Umbrella/UmbrellaControlPage.dart';
@@ -97,7 +92,7 @@ class DashboardHomePage extends StatelessWidget {
                     color: AppColors.primaryNeon,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ControlScreen()),
+                     MaterialPageRoute(builder: (_) => const SmartIrrigationHub()),
                     ),
                   ),
                   _buildServiceCard(

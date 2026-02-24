@@ -4,7 +4,7 @@ import 'Dashboard.dart';
 import 'SettingsPage.dart';
 import 'notifications_page.dart';
 import 'ProfileScreen.dart';
-
+import 'package:smart_village_for_green_gnergy_optimization/features/Chatting/NeighborsPage.dart';
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -20,6 +20,7 @@ class _MainShellState extends State<MainShell> {
     const NotificationsPage(),
     const ProfileScreen(),
     const SettingsPage(),
+    const NeighborsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -69,6 +70,10 @@ class _MainShellState extends State<MainShell> {
             BottomNavigationBarItem(
               icon: Icon(Icons.settings_rounded),
               label: 'Settings',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline_rounded),
+              label: 'Chat',
             ),
           ],
         ),
