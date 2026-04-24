@@ -4,21 +4,20 @@ import 'ParkingDashboardPage.dart';
 import 'MakeReservationPage.dart';
 import 'PaymentWalletPage.dart';
 import 'ParkingSettingsPage.dart';
-import 'FindMyCarPageState.dart'; // تأكدي أن اسم الملف مطابق لما في جهازك
+import 'FindMyCarPageState.dart';
 import 'ShowReservationsPage.dart';
 import 'ParkingSpacePage.dart';
 
 class ParkingScreen {
-  // هذه الأسماء هي "المفاتيح" الثابتة التي تضمن استجابة الأزرار عند الضغط
   static const String dashboard = '/ParkingDashboardPage';
   static const String reservation = '/MakeReservationPage';
   static const String wallet = '/PaymentWalletPage';
   static const String settings = '/ParkingSettingsPage';
-  static const String findCar = '/FindMyCarPageState'; // تم توحيد المسمى ليتطابق مع صفحة الموقع
+  static const String findCar = '/FindMyCarPageState';
   static const String bookings = '/ShowReservationsPage';
   static const String map = '/ParkingSpacePage';
 
-  // دالة تجمع كافة المسارات لتسجيلها في ملف main.dart دفعة واحدة
+  // دالة تجمع كافة المسارات مع تمرير zoneId للـ ParkingSpacePage
   static Map<String, WidgetBuilder> get routes => {
     dashboard: (context) => const ParkingDashboardPage(),
     reservation: (context) => const MakeReservationPage(),
@@ -26,6 +25,11 @@ class ParkingScreen {
     settings: (context) => const ParkingSettingsPage(),
     findCar: (context) => const FindMyCarPage(),
     bookings: (context) => const ShowReservationsPage(),
-    map: (context) => const ParkingSpacePage(),
+    // تمرير zoneId من الـ arguments إن وجدت، وإلا Zone 1 افتراضياً
+    map: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final zoneId = (args is int) ? args : 1;
+      return ParkingSpacePage(zoneId: zoneId);
+    },
   };
-}
+}

@@ -1,84 +1,152 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'dart:ui';
-// استيراد ملف الألوان المركزي الخاص بكِ لضمان الربط المعماري
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
 
 class FanControlPage extends StatefulWidget {
   static const String routeName = '/FanControlPage';
-  const FanControlPage({Key? key}) : super(key: key);
+  const FanControlPage({super.key});
 
   @override
   State<FanControlPage> createState() => _FanControlPageState();
 }
 
 class _FanControlPageState extends State<FanControlPage> {
-  // حالات المراوح بناءً على تصميم النظام
-  bool livingRoomFan = false;
-  bool bedroomFan = false;
-  bool kitchenFan = false;
+  final DeviceService _deviceService = DeviceService();
+
+  List<Map<String, dynamic>> _fans = [];
+  bool _isLoading = true;
   double fanSpeed = 2.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFans();
+  }
+
+  Future<void> _fetchFans() async {
+    final devices = await _deviceService.getDevicesByZone(1);
+    if (mounted) {
+      setState(() {
+        _fans = devices
+            .where((d) =>
+                d['type']?.toString().toLowerCase().contains('fan') ?? false)
+            .map<Map<String, dynamic>>((d) => {
+                  'id': d['id'],
+                  'name': d['name'] ?? 'Fan',
+                  'isOn': d['currentState']?.toString().toUpperCase() == 'ON',
+                })
+            .toList();
+
+        if (_fans.isEmpty && devices.isNotEmpty) {
+          _fans = devices
+              .take(3)
+              .map<Map<String, dynamic>>((d) => {
+                    'id': d['id'],
+                    'name': d['name'] ?? 'Device',
+                    'isOn': d['currentState']?.toString().toUpperCase() == 'ON',
+                  })
+              .toList();
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleFan(int index) async {
+    final fan = _fans[index];
+    final isOn = fan['isOn'] as bool;
+    final command = isOn ? 'OFF' : 'ON';
+
+    setState(() => _fans[index]['isOn'] = !isOn);
+
+    final success =
+        await _deviceService.controlDevice(fan['id'] as int, command);
+
+    if (!success && mounted) {
+      setState(() => _fans[index]['isOn'] = isOn);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to control fan. Check connection.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
+  Future<void> _turnOffAll() async {
+    setState(() {
+      for (var f in _fans) {
+        f['isOn'] = false;
+      }
+      fanSpeed = 0;
+    });
+    await _deviceService.controlBulk(1, 'Fan', 'OFF');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة من ملفك
+      backgroundColor: AppColors.scaffoldBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: AppColors.textLight,
-            size: 22,
-          ),
+          icon: const Icon(Icons.arrow_back_ios,
+              color: AppColors.textLight, size: 22),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          "Fan Control", // العنوان مطابق للصورة
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: AppColors.textLight,
+        title: const Text('Fan Control',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                color: AppColors.textLight)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded,
+                color: AppColors.primaryNeon),
+            onPressed: () {
+              setState(() => _isLoading = true);
+              _fetchFans();
+            },
           ),
-        ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            // قائمة التحكم في المراوح الفردية بتصميم Glassmorphism
-            _buildFanTile(
-              "Living Room Fan",
-              livingRoomFan,
-              (val) => setState(() => livingRoomFan = val),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primaryNeon))
+          : Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _fans.isEmpty
+                        ? const Center(
+                            child: Text('No fan devices found in zone.',
+                                style: TextStyle(color: AppColors.textGrey)))
+                        : ListView.separated(
+                            itemCount: _fans.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 15),
+                            itemBuilder: (context, i) {
+                              final fan = _fans[i];
+                              return _buildFanTile(
+                                fan['name'] as String,
+                                fan['isOn'] as bool,
+                                (_) => _toggleFan(i),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSpeedControlCard(),
+                  const SizedBox(height: 20),
+                  _buildTurnOffAllButton(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-            const SizedBox(height: 15),
-            _buildFanTile(
-              "Bedroom Fan",
-              bedroomFan,
-              (val) => setState(() => bedroomFan = val),
-            ),
-            const SizedBox(height: 15),
-            _buildFanTile(
-              "Kitchen Fan",
-              kitchenFan,
-              (val) => setState(() => kitchenFan = val),
-            ),
-
-            const SizedBox(height: 30),
-
-            // قسم التحكم في السرعة (Slider) مطابق للصورة
-            _buildSpeedControlCard(),
-
-            const Spacer(),
-
-            // زر إيقاف الكل بلون الخطر الموحد من ملفك
-            _buildTurnOffAllButton(),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
     );
   }
 
@@ -86,7 +154,7 @@ class _FanControlPageState extends State<FanControlPage> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.3), // استخدام لون الكروت الموحد
+        color: AppColors.cardBg.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.cardBorder),
       ),
@@ -95,23 +163,21 @@ class _FanControlPageState extends State<FanControlPage> {
         children: [
           Row(
             children: [
-              // أيقونة المروحة كما في الصورة
-              Icon(Icons.wind_power, color: AppColors.textGrey, size: 28),
+              Icon(Icons.wind_power,
+                  color: isOn ? AppColors.primaryNeon : AppColors.textGrey,
+                  size: 28),
               const SizedBox(width: 15),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppColors.textLight,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Text(title,
+                  style: const TextStyle(
+                      color: AppColors.textLight,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
           Switch(
             value: isOn,
-            activeColor: AppColors.textLight, // اللون مطابق للصورة
-            activeTrackColor: AppColors.textGrey,
+            activeColor: AppColors.primaryNeon,
+            activeTrackColor: AppColors.primaryNeon.withValues(alpha: 0.3),
             onChanged: onChanged,
           ),
         ],
@@ -124,22 +190,18 @@ class _FanControlPageState extends State<FanControlPage> {
       padding: const EdgeInsets.all(25),
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.3),
+        color: AppColors.cardBg.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
-          const Text(
-            "Fan Speed Control",
-            style: TextStyle(
-              color: AppColors.textGrey,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          const Text('Fan Speed Control',
+              style: TextStyle(
+                  color: AppColors.textGrey,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500)),
           const SizedBox(height: 10),
-          // الـ Slider باللون النيون الموحد مطابق للصورة
           Slider(
             value: fanSpeed,
             min: 0,
@@ -149,14 +211,11 @@ class _FanControlPageState extends State<FanControlPage> {
             inactiveColor: AppColors.glassWhite,
             onChanged: (val) => setState(() => fanSpeed = val),
           ),
-          Text(
-            "Speed: ${fanSpeed.round()}",
-            style: const TextStyle(
-              color: AppColors.textLight,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Speed: ${fanSpeed.round()}',
+              style: const TextStyle(
+                  color: AppColors.textLight,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -167,26 +226,18 @@ class _FanControlPageState extends State<FanControlPage> {
       width: double.infinity,
       height: 60,
       child: ElevatedButton.icon(
-        onPressed: () {
-          setState(() {
-            livingRoomFan = bedroomFan = kitchenFan = false;
-            fanSpeed = 0;
-          });
-        },
-        icon: const Icon(Icons.power_settings_new, color: AppColors.textLight),
-        label: const Text(
-          "Turn Off All Fans",
-          style: TextStyle(
-            color: AppColors.textLight,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
+        onPressed: _turnOffAll,
+        icon: const Icon(Icons.power_settings_new,
+            color: AppColors.textLight),
+        label: const Text('Turn Off All Fans',
+            style: TextStyle(
+                color: AppColors.textLight,
+                fontWeight: FontWeight.bold,
+                fontSize: 16)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.danger, // استخدام اللون الموحد للإيقاف
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          backgroundColor: AppColors.danger,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
       ),
     );

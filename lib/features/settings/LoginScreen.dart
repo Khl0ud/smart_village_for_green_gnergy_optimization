@@ -8,6 +8,11 @@ import 'ResetPasswordScreen.dart';
 // import 'Dashboard.dart';
 import 'MainShell.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'logic/auth_bloc/auth_bloc.dart';
+import 'logic/auth_bloc/auth_event.dart';
+import 'logic/auth_bloc/auth_state.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -22,130 +27,153 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام اللون الموحد من Core
-      body: Stack(
-        children: [
-          // الدوائر الديكورية باستخدام ألوان الـ AppColors
-          _buildBackgroundDecorations(),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.status == AuthStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.response?.message ?? 'Welcome!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainShell()),
+          );
+        } else if (state.status == AuthStatus.failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'Login Failed'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.scaffoldBg, // استخدام اللون الموحد من Core
+        body: Stack(
+          children: [
+            // الدوائر الديكورية باستخدام ألوان الـ AppColors
+            _buildBackgroundDecorations(),
 
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 30),
-                    _buildLogo(),
-                    const SizedBox(height: 40),
-                    const Text(
-                      'Welcome Back',
-                      style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textLight,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Sign in to your smart village account',
-                      style: TextStyle(fontSize: 16, color: AppColors.textGrey),
-                    ),
-                    const SizedBox(height: 50),
-
-                    // حقول الإدخال المربوطة بملف الألوان
-                    _buildLabel('EMAIL ADDRESS'),
-                    _buildInputField(
-                      controller: _emailController,
-                      hint: 'your@email.com',
-                      icon: Icons.alternate_email_rounded,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildLabel('PASSWORD'),
-                    _buildInputField(
-                      controller: _passwordController,
-                      hint: '••••••••',
-                      icon: Icons.lock_person_rounded,
-                      isPassword: true,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
-                          color: AppColors.textGrey,
-                          size: 20,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 30),
+                      _buildLogo(),
+                      const SizedBox(height: 40),
+                      const Text(
+                        'Welcome Back',
+                        style: TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textLight,
+                          letterSpacing: 1.1,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Sign in to your smart village account',
+                        style: TextStyle(fontSize: 16, color: AppColors.textGrey),
+                      ),
+                      const SizedBox(height: 50),
 
-                    // رابط نسيت كلمة المرور
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ResetPasswordScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.primaryNeon,
-                            fontWeight: FontWeight.bold,
+                      // حقول الإدخال المربوطة بملف الألوان
+                      _buildLabel('EMAIL ADDRESS'),
+                      _buildInputField(
+                        controller: _emailController,
+                        hint: 'your@email.com',
+                        icon: Icons.alternate_email_rounded,
+                      ),
+                      const SizedBox(height: 25),
+
+                      _buildLabel('PASSWORD'),
+                      _buildInputField(
+                        controller: _passwordController,
+                        hint: '••••••••',
+                        icon: Icons.lock_person_rounded,
+                        isPassword: true,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: AppColors.textGrey,
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
 
-                    // زر الدخول المنسق بتوهج نيون
-                    _buildLoginButton(),
-
-                    const SizedBox(height: 40),
-                    _buildDivider(),
-                    const SizedBox(height: 30),
-
-                    // أيقونات التواصل الاجتماعي
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildSocialCircle(
-                          Icons.g_mobiledata_rounded,
-                          Colors.redAccent,
+                      // رابط نسيت كلمة المرور
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ResetPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: AppColors.primaryNeon,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 25),
-                        _buildSocialCircle(
-                          Icons.apple_rounded,
-                          AppColors.textLight,
-                        ),
-                        const SizedBox(width: 25),
-                        _buildSocialCircle(
-                          Icons.facebook_rounded,
-                          Colors.blueAccent,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
+                      ),
+                      const SizedBox(height: 30),
 
-                    // رابط إنشاء حساب
-                    _buildSignUpLink(),
-                    const SizedBox(height: 20),
-                  ],
+                      // زر الدخول المنسق بتوهج نيون
+                      _buildLoginButton(),
+
+                      const SizedBox(height: 40),
+                      _buildDivider(),
+                      const SizedBox(height: 30),
+
+                      // أيقونات التواصل الاجتماعي
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildSocialCircle(
+                            Icons.g_mobiledata_rounded,
+                            Colors.redAccent,
+                          ),
+                          const SizedBox(width: 25),
+                          _buildSocialCircle(
+                            Icons.apple_rounded,
+                            AppColors.textLight,
+                          ),
+                          const SizedBox(width: 25),
+                          _buildSocialCircle(
+                            Icons.facebook_rounded,
+                            Colors.blueAccent,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+
+                      // رابط إنشاء حساب
+                      _buildSignUpLink(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -230,44 +258,73 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // هنا بنحسب شكل الزرار ونربطه بالـ Bloc
   Widget _buildLoginButton() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryNeon.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainShell()),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryNeon,
-          foregroundColor: AppColors.textDark,
-          shape: RoundedRectangleBorder(
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return Container(
+          width: double.infinity,
+          height: 60,
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryNeon.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          elevation: 0,
-        ),
-        child: const Text(
-          'LOG IN',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
+          child: ElevatedButton(
+            onPressed: state.status == AuthStatus.loading
+                ? null
+                : () {
+                    // بناخد الكلام اللي اليوزر كتبه
+                    final email = _emailController.text.trim();
+                    final password = _passwordController.text.trim();
+
+                    // بنتشيك لو نسي يكتب حاجة
+                    if (email.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('يا ريت تكتب الإيميل والباسورد الأول')),
+                      );
+                      return;
+                    }
+
+                    // بننادي على الـ Bloc عشان يبدأ عملية الدخول
+                    context.read<AuthBloc>().add(
+                          LoginSubmitted(email: email, password: password),
+                        );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryNeon,
+              foregroundColor: AppColors.textDark,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 0,
+              disabledBackgroundColor: AppColors.primaryNeon.withOpacity(0.6),
+            ),
+            child: state.status == AuthStatus.loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: AppColors.textDark,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'LOG IN',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -8,6 +8,9 @@ import 'ProfileScreen.dart';
 import 'IntegrationPage.dart';
 import 'package:smart_village_for_green_gnergy_optimization/features/security/SecurityPage.dart';
 import 'package:smart_village_for_green_gnergy_optimization/features/help_support/help_support_page.dart';
+import 'data/services/auth_service.dart';
+import 'LoginScreen.dart';
+
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -205,8 +208,8 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-
   Widget _buildLoginsCard() {
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -227,7 +230,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildLogoutOption('Log out', Icons.logout_rounded, Colors.redAccent),
+          _buildLogoutOption('Log out', Icons.logout_rounded, Colors.redAccent, onTap: () => _showLogoutConfirmation(context)),
           _buildLogoutOption(
             'Switch accounts',
             Icons.switch_account_rounded,
@@ -243,16 +246,62 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildLogoutOption(String title, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Text(title, style: TextStyle(color: color, fontSize: 16)),
-        ],
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: AppColors.cardBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: AppColors.cardBorder),
+          ),
+          title: const Text("Log Out", style: TextStyle(color: AppColors.primaryNeon, fontWeight: FontWeight.bold)),
+          content: const Text("Are you sure you want to log out from your account?", style: TextStyle(color: AppColors.textGrey)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCEL", style: TextStyle(color: AppColors.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final authService = AuthService();
+                await authService.logout();
+                if (mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text("LOG OUT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
+
+
+  Widget _buildLogoutOption(String title, IconData icon, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 12),
+            Text(title, style: TextStyle(color: color, fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

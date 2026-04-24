@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-// استيراد ملف الألوان المركزي من مجلد core بناءً على هيكلية الملفات
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'data/services/auth_service.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -14,20 +14,15 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // محاكاة لبيانات التنبيهات المنسقة لمشاريع الـ IoT
-  final List<Map<String, dynamic>> _notifications = [
-    {"title": "Irrigation Alert", "subtitle": "Zone A needs watering immediately.", "icon": Icons.water_drop_rounded, "time": "2m ago"},
-    {"title": "Energy Update", "subtitle": "Solar panels are operating at 95% efficiency.", "icon": Icons.solar_power_rounded, "time": "15m ago"},
-    {"title": "Security Notice", "subtitle": "New motion detected near the Smart Home gate.", "icon": Icons.security_rounded, "time": "1h ago"},
-    {"title": "Waste Management", "subtitle": "Bin B-04 is 90% full. Collection requested.", "icon": Icons.delete_sweep_rounded, "time": "3h ago"},
-    {"title": "System Update", "subtitle": "Smart Village OS updated to v2.4.0", "icon": Icons.system_update_rounded, "time": "Yesterday"},
-  ];
+  final AuthService _authService = AuthService();
+  bool _isLoading = true;
+  List<dynamic> _realNotifications = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchNotifications();
 
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -35,11 +30,22 @@ class _NotificationsPageState extends State<NotificationsPage>
     ));
   }
 
+  Future<void> _fetchNotifications() async {
+    final data = await _authService.getNotifications();
+    if (mounted) {
+      setState(() {
+        _realNotifications = data;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -67,15 +73,18 @@ class _NotificationsPageState extends State<NotificationsPage>
                 _buildHeader(primaryNeon),
                 _buildTabBar(primaryNeon),
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildNotificationList(),
-                      _buildNotificationList(filter: "Alerts"),
-                      _buildNotificationList(filter: "Updates"),
-                    ],
-                  ),
+                  child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildNotificationList(),
+                          _buildNotificationList(filter: "Alerts"),
+                          _buildNotificationList(filter: "Updates"),
+                        ],
+                      ),
                 ),
+
               ],
             ),
           ),
@@ -99,18 +108,27 @@ class _NotificationsPageState extends State<NotificationsPage>
               letterSpacing: 1.1,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.cardBg.withOpacity(0.5),
-              shape: BoxShape.circle,
+          TextButton(
+            onPressed: () async {
+              final success = await _authService.markAllNotificationsAsRead();
+              if (success && mounted) {
+                setState(() {
+                  for (var item in _realNotifications) {
+                    item['isRead'] = true;
+                  }
+                });
+              }
+            },
+            child: Text(
+              "Mark all as read",
+              style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.bold),
             ),
-            child: Icon(Icons.notifications_active_rounded, color: accent, size: 20),
-          )
+          ),
         ],
       ),
     );
   }
+
 
   Widget _buildTabBar(Color accent) {
     return Container(
@@ -141,68 +159,120 @@ class _NotificationsPageState extends State<NotificationsPage>
   }
 
   Widget _buildNotificationList({String? filter}) {
+    if (_realNotifications.isEmpty) {
+      return const Center(
+        child: Text("No notifications yet", style: TextStyle(color: AppColors.textGrey)),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
       physics: const BouncingScrollPhysics(),
-      itemCount: _notifications.length,
+      itemCount: _realNotifications.length,
       itemBuilder: (context, index) {
-        final item = _notifications[index];
+        final item = _realNotifications[index];
         return _buildNotificationCard(item);
       },
     );
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        // تصميم Glassmorphism المعتمد
-        color: AppColors.cardBg.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: AppColors.primaryNeon.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(item["icon"], color: AppColors.primaryNeon, size: 26),
+  Widget _buildNotificationCard(dynamic item) {
+    // تحديد الأيقونة بناءً على النوع أو اختيار أيقونة افتراضية
+    IconData icon = Icons.notifications_none_rounded;
+    if (item['title']?.toString().contains('Irrigation') ?? false) icon = Icons.water_drop_rounded;
+    if (item['title']?.toString().contains('Security') ?? false) icon = Icons.security_rounded;
+    
+    bool isRead = item['isRead'] ?? false;
+
+    return GestureDetector(
+      onTap: () async {
+        if (!isRead) {
+          final success = await _authService.markNotificationAsRead(item['id'].toString());
+          if (success && mounted) {
+            setState(() {
+              item['isRead'] = true; // تحديث الحالة محلياً فوراً
+            });
+          }
+        }
+      },
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: isRead ? 0.6 : 1.0,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isRead ? AppColors.cardBg.withOpacity(0.2) : AppColors.cardBg.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: isRead ? AppColors.cardBorder.withOpacity(0.5) : AppColors.cardBorder),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      item["title"]!,
-                      style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold, fontSize: 16),
+          child: Row(
+            children: [
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryNeon.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(15),
                     ),
+                    child: Icon(icon, color: AppColors.primaryNeon, size: 26),
+                  ),
+                  if (!isRead)
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primaryNeon,
+                        shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: AppColors.primaryNeon, blurRadius: 10)],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          item["title"] ?? "Notification",
+                          style: TextStyle(
+                            color: isRead ? AppColors.textGrey : AppColors.textLight, 
+                            fontWeight: isRead ? FontWeight.normal : FontWeight.bold, 
+                            fontSize: 16
+                          ),
+                        ),
+                        Text(
+                          item["createdAt"]?.toString().substring(0, 10) ?? "",
+                          style: const TextStyle(color: AppColors.textGrey, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
                     Text(
-                      item["time"]!,
-                      style: const TextStyle(color: AppColors.textGrey, fontSize: 10, fontWeight: FontWeight.bold),
+                      item["message"] ?? item["body"] ?? "",
+                      style: TextStyle(
+                        color: isRead ? Colors.white24 : Colors.white54, 
+                        fontSize: 13, 
+                        height: 1.4
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  item["subtitle"]!,
-                  style: const TextStyle(color: Colors.white54, fontSize: 13, height: 1.4),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+
+
 }

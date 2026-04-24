@@ -4,19 +4,40 @@ import 'dart:ui';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 import 'shared_widgets.dart';
 
-class GateLogsPage extends StatelessWidget {
+import 'package:smart_village_for_green_gnergy_optimization/core/services/camera_service.dart';
+import 'video_player_screen.dart';
+
+class GateLogsPage extends StatefulWidget {
   const GateLogsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // محاكاة لبيانات السجلات الخاصة ببوابة القرية الذكية
-    final logs = List.generate(
-      14,
-      (i) => i.isEven
-          ? ('Check in', '03:35 AM • 24/Aug/2026', Icons.login_rounded)
-          : ('Check out', '11:20 PM • 24/Aug/2026', Icons.logout_rounded),
-    );
+  State<GateLogsPage> createState() => _GateLogsPageState();
+}
 
+class _GateLogsPageState extends State<GateLogsPage> {
+  final CameraService _cameraService = CameraService();
+  List<dynamic> logs = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLogs();
+  }
+
+  Future<void> _fetchLogs() async {
+    // افترضنا أن كاميرا البوابة الرئيسية تحمل رقم 1
+    final recordings = await _cameraService.getRecordings('1');
+    if (mounted) {
+      setState(() {
+        logs = recordings;
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     const Color mainBg = AppColors.scaffoldBg;
     const Color primaryNeon = AppColors.primaryNeon;
 
@@ -24,48 +45,83 @@ class GateLogsPage extends StatelessWidget {
       backgroundColor: mainBg,
       body: Stack(
         children: [
-          // الخلفية المنحنية العلوية المتناسقة مع هوية المشروع
           const TopCurvedBackground(height: 200),
-
           Column(
             children: [
-              const TopSearchBar(),
+              // شريط البحث مع ربط البحث بالسيرفر
+              TopSearchBar(
+                onSearch: (query) {
+                  // فلترة السجلات المحلية بناءً على البحث
+                  setState(() {});
+                },
+              ),
+              // بانر يعرض حالة الكاميرات من السيرفر في الوقت الفعلي
+              const LiveStatusBanner(),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                child: Text(
-                  'Gate Access Logs',
-                  style: TextStyle(
-                    color: primaryNeon, // استخدام اللون النيون الموحد
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Gate Access Logs',
+                      style: TextStyle(
+                        color: primaryNeon,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    // زر تحديث السجلات يدوياً من السيرفر
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryNeon),
+                      onPressed: _fetchLogs,
+                      tooltip: 'Refresh from server',
+                    ),
+                  ],
                 ),
               ),
-
-              // رأس الجدول بتصميم Glassmorphism
               const _TableHeader(),
-
               const SizedBox(height: 10),
-
-              // قائمة السجلات المنسقة
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: logs.length,
-                  itemBuilder: (_, i) {
-                    final (type, date, icon) = logs[i];
-                    return _TableRow(
-                      type: type,
-                      date: date,
-                      icon: icon,
-                    );
-                  },
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                ),
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator(color: primaryNeon))
+                    : logs.isEmpty
+                        ? const Center(
+                            child: Text('No recordings found.', style: TextStyle(color: AppColors.textGrey)))
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: logs.length,
+                            itemBuilder: (_, i) {
+                              final log = logs[i];
+                              final time = log['time'] ?? 'Unknown Time';
+                              final videoUrl = log['videoUrl'];
+                              
+                              return GestureDetector(
+                                onTap: () {
+                                  if (videoUrl != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => VideoPlayerScreen(
+                                          url: videoUrl,
+                                          title: 'Recording $time',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: _TableRow(
+                                  type: 'Motion Detected',
+                                  date: time,
+                                  icon: Icons.videocam_rounded,
+                                ),
+                              );
+                            },
+                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          ),
               ),
-              const SizedBox(height: 100), // مساحة للتنقل السفلي
+              const SizedBox(height: 100),
             ],
           ),
         ],

@@ -25,6 +25,10 @@ import 'features/Smart Home/ValveControlPage.dart';
 import 'features/Smart Home/GasSafetyPage.dart';
 import 'features/Smart Home/HomePage.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/settings/data/services/auth_service.dart';
+import 'features/settings/logic/auth_bloc/auth_bloc.dart';
+
 void main() {
   // ضبط إعدادات النظام وتثبيت الاتجاهات لضمان أفضل أداء للـ IoT Dashboard
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +39,16 @@ void main() {
     ),
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => AuthBloc(authService: AuthService()),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

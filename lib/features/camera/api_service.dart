@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:smart_village_for_green_gnergy_optimization/core/api_constants.dart';
 
 class CameraApiService {
-  // 1. استبدلي 192.168.1.10 بـ IP جهازك الحقيقي (اكتبيه في الـ CMD عبر ipconfig)
-  // 2. بورت الـ API في الـ .NET غالباً يكون 5000 أو 5123 (تأكدي منه)
-  static const String serverIp = '192.168.1.10';
-  final String baseUrl = 'http://$serverIp:5000/api/Surveillance';
+  final String baseUrl = '${ApiConstants.baseUrl}/Surveillance';
 
   // رابط الصور أو الفيديوهات المسجلة (Static Files)
-  final String mediaBaseUrl = 'http://$serverIp:5000/recordings';
+  final String mediaBaseUrl = ApiConstants.mediaBaseUrl;
+
 
   // جلب الكاميرات الأربعة
   Future<List<dynamic>> getCameras() async {

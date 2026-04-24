@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
@@ -10,17 +11,55 @@ class AlertsScreen extends StatefulWidget {
 }
 
 class _AlertsScreenState extends State<AlertsScreen> {
+  final SensorService _sensorService = SensorService();
+  Timer? _refreshTimer;
+  
+  double soilMoisture = 100.0;
+  bool isRaining = false;
+  double temperature = 0.0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAlertsData();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) => _fetchAlertsData());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchAlertsData() async {
+    final readings = await _sensorService.getLatestReadings(1);
+    if (mounted) {
+      setState(() {
+        for (var r in readings) {
+          final type = r['type']?.toString() ?? '';
+          final value = (r['value'] ?? 0.0).toDouble();
+          
+          if (type == 'SoilMoisture' || type == '3') soilMoisture = value;
+          if (type == 'Rain' || type == '4') isRaining = value > 50;
+          if (type == 'Temperature' || type == '0') temperature = value;
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة
+      backgroundColor: AppColors.scaffoldBg,
       body: Container(
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: AppColors.mainGradient, // استخدام تدرج مشروعك الرسمي
+            colors: AppColors.mainGradient,
           ),
         ),
         child: SafeArea(
@@ -32,52 +71,60 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Text(
                   "System Notifications",
-                  style: TextStyle(
-                    color: AppColors.textLight, // اللون الفاتح المعتمد
-                    fontSize: 24, 
-                    fontWeight: FontWeight.bold
-                  ),
+                  style: TextStyle(color: AppColors.textLight, fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // 1. تنبيه انخفاض المياه (بناءً على شرط waterPercent <= 20)
-                    _buildAlertCard(
-                      title: "Critical Water Level!",
-                      message: "Warning: Water level is critically low - 20%! Fill the tank now.",
-                      time: "Just Now",
-                      icon: Icons.warning_amber_rounded,
-                      accentColor: AppColors.danger, // استخدام لون التحذير الأحمر
-                      isCritical: true,
-                    ),
-                    
-                    const SizedBox(height: 15),
+                child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                  : ListView(
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        if (soilMoisture < 30)
+                          _buildAlertCard(
+                            title: "Critical Moisture!",
+                            message: "Soil moisture is critically low (${soilMoisture.toInt()}%). Plants need water immediately.",
+                            time: "Live",
+                            icon: Icons.warning_amber_rounded,
+                            accentColor: AppColors.danger,
+                            isCritical: true,
+                          ),
+                        
+                        if (isRaining)
+                          _buildAlertCard(
+                            title: "Rain Detected",
+                            message: "Natural irrigation in progress. System components are secured.",
+                            time: "Live",
+                            icon: Icons.umbrella_rounded,
+                            accentColor: AppColors.info,
+                            isCritical: false,
+                          ),
 
-                    // 2. تنبيه المطر (بناءً على شرط isRaining)
-                    _buildAlertCard(
-                      title: "Rain Detected",
-                      message: "System protected. Components secured by Servo mechanism.",
-                      time: "10 mins ago",
-                      icon: Icons.umbrella_rounded,
-                      accentColor: AppColors.info, // استخدام اللون الأزرق للمعلومات
-                      isCritical: false,
-                    ),
+                        if (temperature > 35)
+                          _buildAlertCard(
+                            title: "Heat Alert",
+                            message: "High temperature detected (${temperature.toInt()}°C). Monitoring evaporation rates.",
+                            time: "Live",
+                            icon: Icons.thermostat_rounded,
+                            accentColor: AppColors.warning,
+                            isCritical: false,
+                          ),
 
-                    const SizedBox(height: 15),
-
-                    // تنبيه حالة المضخة
-                    _buildAlertCard(
-                      title: "Pump Status",
-                      message: "Irrigation completed successfully. Total water: 12L.",
-                      time: "2 hours ago",
-                      icon: Icons.check_circle_outline_rounded,
-                      accentColor: AppColors.primaryNeon, // استخدام اللون النيون للنجاح
-                      isCritical: false,
+                        if (soilMoisture >= 30 && !isRaining && temperature <= 35)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(40.0),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.check_circle_outline_rounded, color: AppColors.success.withValues(alpha: 0.3), size: 60),
+                                  const SizedBox(height: 10),
+                                  const Text("System Status Normal", style: TextStyle(color: AppColors.textGrey)),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -105,12 +152,13 @@ class _AlertsScreenState extends State<AlertsScreen> {
     required bool isCritical,
   }) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.3), // تأثير زجاجي نيون
+        color: AppColors.cardBg.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: isCritical ? accentColor.withOpacity(0.5) : AppColors.cardBorder, // حدود نيون
+          color: isCritical ? accentColor.withValues(alpha: 0.5) : AppColors.cardBorder,
           width: isCritical ? 2 : 1,
         ),
       ),
@@ -118,7 +166,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: accentColor.withOpacity(0.1),
+            backgroundColor: accentColor.withValues(alpha: 0.1),
             child: Icon(icon, color: accentColor),
           ),
           const SizedBox(width: 15),

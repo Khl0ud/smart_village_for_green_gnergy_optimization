@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green, // اللون الأساسي أخضر بما إنها Green Energy
         useMaterial3: true,
       ),
-      home: CamerasScreen(),
+      home: CameraMain(),
     );
   }
 }

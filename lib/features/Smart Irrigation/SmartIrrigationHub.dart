@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
+import 'dart:async';
+
+
 
 // استيراد كافة الملفات المطلوبة للربط
 import 'AlertsScreen.dart';
@@ -17,6 +21,9 @@ class SmartIrrigationHub extends StatefulWidget {
 }
 
 class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
+  final SensorService _sensorService = SensorService();
+  Timer? _timer;
+
   // متغيرات حالة النظام
   double temp = 23.0;
   double humidity = 35.0;
@@ -25,6 +32,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
   bool gardenLight = false;
   bool emergencyStop = false;
   bool isRaining = false;
+
   
   // الزونات
   IrrigationZone zone1 = IrrigationZone(
@@ -46,6 +54,62 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
   
   // نوع النبات المختار
   PlantType? selectedPlant;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+    // تحديث البيانات كل 10 ثوانٍ
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) => _fetchData());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    // جلب قراءات كل الحساسات في المنطقة (Zone 1 كمثال) من السيرفر بطلب واحد
+    final readings = await _sensorService.getLatestReadings(1);
+
+    if (mounted) {
+      setState(() {
+        for (var r in readings) {
+          final type = r['type']?.toString();
+          final value = (r['value'] ?? 0.0).toDouble();
+          final deviceName = r['deviceName']?.toString() ?? '';
+
+          if (type == 'Temperature' || type == '0') {
+            temp = value;
+          } else if (type == 'WaterLevel' || type == '4') {
+            waterLevel = value.toInt();
+          } else if (type == 'SoilMoisture' || type == '2') {
+            // تفريق الرطوبة حسب اسم الجهاز (أو يمكن عبر DeviceId)
+            if (deviceName.contains('Zone 1')) {
+              zone1 = IrrigationZone(
+                id: zone1.id, name: zone1.name, soilMoisture: value, valveOpen: zone1.valveOpen,
+              );
+            } else if (deviceName.contains('Zone 2')) {
+              zone2 = IrrigationZone(
+                id: zone2.id, name: zone2.name, soilMoisture: value, valveOpen: zone2.valveOpen,
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _updateSensor(int deviceId, int type, double value) async {
+    // محاكاة إرسال قراءة جديدة (ESP32 Simulation)
+    await _sensorService.recordReading(
+      deviceId: deviceId,
+      type: type,
+      value: value,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -422,8 +486,10 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 (v) {
                   if (!emergencyStop) {
                     setState(() => isPumpOn = v);
+                    _updateSensor(101, 1, v ? 1.0 : 0.0);
                   }
                 },
+
               ),
             ),
             const SizedBox(width: 15),
@@ -444,10 +510,12 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 (v) {
                   if (!emergencyStop) {
                     setState(() => gardenLight = v);
+                    _updateSensor(102, 2, v ? 1.0 : 0.0);
                   }
                 },
               ),
             ),
+
             const SizedBox(width: 15),
             Expanded(
               child: _buildControlTile(
@@ -457,6 +525,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 (v) {
                   if (!emergencyStop) {
                     setState(() => tankValveOpen = v);
+                    _updateSensor(103, 3, v ? 1.0 : 0.0);
                   }
                 },
               ),
@@ -466,6 +535,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
       ],
     );
   }
+
 
   Widget _buildEmergencyStopTile() {
     return GestureDetector(

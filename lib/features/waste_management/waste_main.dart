@@ -4,6 +4,8 @@ import 'package:percent_indicator/percent_indicator.dart';
 
 // استيراد الصفحات الأخرى للربط
 import 'dashboard_screen.dart';
+import 'data/services/waste_service.dart';
+
 import 'bin_levels_screen.dart';
 import 'map_screen.dart';
 import 'collection_request_screen.dart';
@@ -12,8 +14,20 @@ class Bin {
   final String id;
   final String location;
   final double fill;
-  Bin({required this.id, required this.location, required this.fill});
+  final String type;
+  final double? lat;
+  final double? lng;
+  
+  Bin({
+    required this.id, 
+    required this.location, 
+    required this.fill, 
+    this.type = 'General',
+    this.lat,
+    this.lng,
+  });
 }
+
 
 class WasteDashboard extends StatefulWidget {
   static const String routeName = '/WasteDashboard';
@@ -24,13 +38,37 @@ class WasteDashboard extends StatefulWidget {
 }
 
 class _WasteDashboardState extends State<WasteDashboard> {
-  final List<Bin> bins = [
-    Bin(id: 'B-01', location: 'Zone A', fill: 0.92),
-    Bin(id: 'B-02', location: 'Zone B', fill: 0.64),
-    Bin(id: 'B-03', location: 'Zone C', fill: 0.38),
-    Bin(id: 'B-04', location: 'Zone D', fill: 0.18),
-    Bin(id: 'B-05', location: 'Zone E', fill: 0.05),
-  ];
+  final WasteService _wasteService = WasteService();
+  List<Bin> bins = [];
+  bool _isLoading = true;
+  double _overallFill = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    final data = await _wasteService.getDashboard(1);
+    if (mounted) {
+      setState(() {
+        if (data != null) {
+          _overallFill = (data['averageFillPercentage'] ?? 0.0).toDouble() / 100.0;
+          bins = (data['binsDetails'] as List).map((b) => Bin(
+              id: b['id']?.toString() ?? '0',
+              location: b['name'] ?? 'Unknown',
+              fill: (b['fillLevel'] ?? 0.0).toDouble() / 100.0,
+              type: 'General',
+              lat: b['latitude']?.toDouble(),
+              lng: b['longitude']?.toDouble(),
+            )).toList();
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -40,40 +78,44 @@ class _WasteDashboardState extends State<WasteDashboard> {
         children: [
           _buildBackgroundGradient(),
           SafeArea(
-            child: Column(
-              children: [
-                _buildModernHeader(context),
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        // كارت الحالة يفتح صفحة الداشبورد التفصيلية
-                        GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DashboardScreen(bins: bins))),
-                          child: _buildOverallStatusCard(),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+              : Column(
+                  children: [
+                    _buildModernHeader(context),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _fetchData,
+                        color: AppColors.primaryNeon,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 10),
+                              GestureDetector(
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DashboardScreen(initialBins: bins))),
+                                child: _buildOverallStatusCard(),
+                              ),
+                              const SizedBox(height: 25),
+                              _buildSectionHeader("Bin Levels", Icons.analytics_rounded),
+                              GestureDetector(
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => BinLevelsScreen(initialBins: bins))),
+                                child: _buildBinsList(),
+                              ),
+                              const SizedBox(height: 25),
+                              _buildActionButtons(context),
+                              const SizedBox(height: 40),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 25),
-                        _buildSectionHeader("Bin Levels", Icons.analytics_rounded),
-                        // قائمة الصناديق تفتح صفحة المستويات
-                        GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => BinLevelsScreen(bins: bins))),
-                          child: _buildBinsList(),
-                        ),
-                        const SizedBox(height: 25),
-                        // الأزرار التي كانت لا تعمل (تم تفعيلها الآن)
-                        _buildActionButtons(context),
-                        const SizedBox(height: 40),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
           ),
+
         ],
       ),
     );
@@ -112,6 +154,8 @@ class _WasteDashboardState extends State<WasteDashboard> {
   }
 
   Widget _buildOverallStatusCard() {
+    String status = _overallFill > 0.8 ? "High Fill" : (_overallFill > 0.5 ? "Moderate Fill" : "Low Fill");
+    
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -124,18 +168,18 @@ class _WasteDashboardState extends State<WasteDashboard> {
           CircularPercentIndicator(
             radius: 50.0,
             lineWidth: 10.0,
-            percent: 0.43,
-            center: const Text("43%", style: TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold, fontSize: 18)),
-            progressColor: AppColors.primaryNeon,
+            percent: _overallFill,
+            center: Text("${(_overallFill * 100).toInt()}%", style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold, fontSize: 18)),
+            progressColor: _overallFill > 0.8 ? AppColors.danger : AppColors.primaryNeon,
             backgroundColor: Colors.white10,
             circularStrokeCap: CircularStrokeCap.round,
           ),
           const SizedBox(width: 25),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Overall Status", style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
-              Text("Moderate Fill", style: TextStyle(color: AppColors.textLight, fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text("Overall Status", style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
+              Text(status, style: const TextStyle(color: AppColors.textLight, fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
           const Spacer(),
@@ -144,6 +188,7 @@ class _WasteDashboardState extends State<WasteDashboard> {
       ),
     );
   }
+
 
   Widget _buildBinsList() {
     return Column(children: bins.take(2).map((bin) => _buildBinItem(bin)).toList());
@@ -186,7 +231,7 @@ class _WasteDashboardState extends State<WasteDashboard> {
           "Map View",
           Icons.map_rounded,
           AppColors.info,
-              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MapScreen())),
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => MapScreen(bins: bins))),
         ),
         const SizedBox(width: 15),
         _buildActionTile(

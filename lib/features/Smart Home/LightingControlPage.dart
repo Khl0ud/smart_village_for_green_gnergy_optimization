@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
-// استيراد ملف الألوان المركزي لضمان التناسق الهيكلي
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
+import 'dart:async';
+
+
 
 class LightingControlPage extends StatefulWidget {
   static const String routeName = '/LightingControlPage';
@@ -12,13 +14,47 @@ class LightingControlPage extends StatefulWidget {
 }
 
 class _LightingControlPageState extends State<LightingControlPage> {
-  // الحالات الافتراضية بناءً على تصميم النظام في صورك
-  bool bathroom = false;
-  bool kitchen = true;
-  bool livingRoom = false;
-  bool corridor = false;
-  bool bedroom = true;
-  bool childrenRoom = false;
+  final DeviceService _deviceService = DeviceService();
+  List<dynamic> _devices = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDevices();
+  }
+
+  Future<void> _fetchDevices() async {
+    // نفترض أن الزون الحالي رقم 1 (يمكنك تغييره ديناميكياً لاحقاً)
+    final devices = await _deviceService.getDevicesByZone(1);
+    if (mounted) {
+      setState(() {
+        _devices = devices;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleLight(int deviceId, bool isOn) async {
+    final newState = isOn ? "ON" : "OFF";
+    final success = await _deviceService.controlDevice(deviceId, newState);
+    if (success) {
+      _fetchDevices();
+    }
+  }
+
+  Future<void> _controlAll(bool turnOn) async {
+    final newState = turnOn ? "ON" : "OFF";
+    if (_devices.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    final success = await _deviceService.controlBulk(1, 'Light', newState);
+    if (success) {
+      _fetchDevices();
+    }
+    setState(() => _isLoading = false);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -37,69 +73,83 @@ class _LightingControlPageState extends State<LightingControlPage> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: AppColors.textLight),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Control every light in your home", // النص الفرعي مطابق للصورة
-              style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-            ),
-            const SizedBox(height: 25),
-            
-            // أزرار التحكم الكلي (All On / All Off)
-            Row(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+        : Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _buildMasterButton("All On", Icons.lightbulb, true)),
-                const SizedBox(width: 15),
-                Expanded(child: _buildMasterButton("All Off", Icons.lightbulb_outline, false)),
+                const Text(
+                  "Control every light in your home",
+                  style: TextStyle(color: AppColors.textGrey, fontSize: 14),
+                ),
+                const SizedBox(height: 25),
+                
+                Row(
+                  children: [
+                    Expanded(child: _buildMasterButton("All On", Icons.lightbulb, true, () => _controlAll(true))),
+                    const SizedBox(width: 15),
+                    Expanded(child: _buildMasterButton("All Off", Icons.lightbulb_outline, false, () => _controlAll(false))),
+                  ],
+                ),
+                const SizedBox(height: 30),
+    
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _fetchDevices,
+                    color: AppColors.primaryNeon,
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        childAspectRatio: 1.1,
+                      ),
+                      itemCount: _devices.length,
+                      itemBuilder: (context, index) {
+                        final device = _devices[index];
+                        final bool isOn = device['currentState'] == "ON" || device['currentState'] == "true";
+                        return _buildLightCard(
+                          device['name'] ?? "Light", 
+                          isOn, 
+                          (val) => _toggleLight((device['id'] as num).toInt(), val)
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 30),
+          ),
 
-            // شبكة التحكم في الغرف بتصميم Grid مطابق للصورة
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 1.1,
-                children: [
-                  _buildLightCard("Bathroom", bathroom, (val) => setState(() => bathroom = val)),
-                  _buildLightCard("Kitchen", kitchen, (val) => setState(() => kitchen = val)),
-                  _buildLightCard("Living Room", livingRoom, (val) => setState(() => livingRoom = val)),
-                  _buildLightCard("Corridor", corridor, (val) => setState(() => corridor = val)),
-                  _buildLightCard("Bedroom", bedroom, (val) => setState(() => bedroom = val)),
-                  _buildLightCard("Children's Room", childrenRoom, (val) => setState(() => childrenRoom = val)),
-                ],
-              ),
-            ),
+    );
+  }
+
+  // أزرار التحكم العلوي بتصميم Stadium
+  Widget _buildMasterButton(String label, IconData icon, bool turnOn, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.cardBg.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: AppColors.cardBorder),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.textLight, size: 20),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
 
-  // أزرار التحكم العلوي بتصميم Stadium
-  Widget _buildMasterButton(String label, IconData icon, bool turnOn) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: AppColors.textLight, size: 20),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
 
   // كارت الغرفة الذكي بتصميم Glassmorphism المتغير
   Widget _buildLightCard(String room, bool isOn, Function(bool) onChanged) {
@@ -107,10 +157,10 @@ class _LightingControlPageState extends State<LightingControlPage> {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         // التوهج الأخضر للكارت عند التشغيل مطابق للصورة
-        color: isOn ? AppColors.primaryNeon.withOpacity(0.15) : AppColors.cardBg.withOpacity(0.3),
+        color: isOn ? AppColors.primaryNeon.withValues(alpha: 0.15) : AppColors.cardBg.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: isOn ? AppColors.primaryNeon.withOpacity(0.5) : AppColors.cardBorder,
+          color: isOn ? AppColors.primaryNeon.withValues(alpha: 0.5) : AppColors.cardBorder,
         ),
       ),
       child: Column(

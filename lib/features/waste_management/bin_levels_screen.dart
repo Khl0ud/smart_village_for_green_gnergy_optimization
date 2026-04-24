@@ -1,25 +1,60 @@
 import 'package:flutter/material.dart';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-// استيراد كلاس Bin من الملف الرئيسي للموديول
 import 'waste_main.dart';
+import 'data/services/waste_service.dart';
 
-class BinLevelsScreen extends StatelessWidget {
-  final List<Bin> bins;
+class BinLevelsScreen extends StatefulWidget {
+  final List<Bin>? initialBins;
+  const BinLevelsScreen({super.key, this.initialBins});
 
-  const BinLevelsScreen({super.key, required this.bins});
+  @override
+  State<BinLevelsScreen> createState() => _BinLevelsScreenState();
+}
 
-  // منطق تحديد اللون بناءً على مستوى الامتلاء من ملفك الرسمي
+class _BinLevelsScreenState extends State<BinLevelsScreen> {
+  final WasteService _wasteService = WasteService();
+  late List<Bin> _bins;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bins = widget.initialBins ?? [];
+    if (_bins.isEmpty) {
+      _fetchBins();
+    }
+  }
+
+  Future<void> _fetchBins() async {
+    setState(() => _isLoading = true);
+    final data = await _wasteService.getDashboard(1);
+    if (mounted && data != null) {
+      setState(() {
+        _bins = (data['binsDetails'] as List).map((b) => Bin(
+          id: b['id']?.toString() ?? '0',
+          location: b['name'] ?? 'Unknown',
+          fill: (b['fillLevel'] ?? 0.0).toDouble() / 100.0,
+          type: 'General',
+          lat: b['latitude']?.toDouble(),
+          lng: b['longitude']?.toDouble(),
+        )).toList();
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Color _getStatusColor(double fill) {
-    if (fill >= 0.8) return AppColors.danger; // حالة حرجة (أحمر)
-    if (fill >= 0.5) return AppColors.warning; // حالة متوسطة (برتقالي)
-    return AppColors.primaryNeon; // حالة جيدة (أخضر نيون)
+    if (fill >= 0.8) return AppColors.danger;
+    if (fill >= 0.5) return AppColors.warning;
+    return AppColors.primaryNeon;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة
+      backgroundColor: AppColors.scaffoldBg,
       body: Stack(
         children: [
           _buildBackgroundGradient(),
@@ -31,7 +66,27 @@ class BinLevelsScreen extends StatelessWidget {
                 children: [
                   _buildHeader(context),
                   const SizedBox(height: 25),
-                  _buildBinsList(),
+                  Expanded(
+                    child: _isLoading 
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                      : RefreshIndicator(
+                          onRefresh: _fetchBins,
+                          color: AppColors.primaryNeon,
+                          child: _bins.isEmpty 
+                            ? const Center(child: Text("No bins found", style: TextStyle(color: AppColors.textGrey)))
+                            : ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.only(bottom: 50),
+                                itemCount: _bins.length,
+                                separatorBuilder: (_, index) => const SizedBox(height: 16),
+                                itemBuilder: (context, i) {
+                                  final bin = _bins[i];
+                                  final statusColor = _getStatusColor(bin.fill);
+                                  return _BinLevelCard(bin: bin, color: statusColor);
+                                },
+                              ),
+                        ),
+                  ),
                 ],
               ),
             ),
@@ -59,47 +114,13 @@ class BinLevelsScreen extends StatelessWidget {
       children: [
         const SizedBox(height: 10),
         IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.textLight,
-            size: 22,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textLight, size: 22),
           onPressed: () => Navigator.pop(context),
         ),
         const SizedBox(height: 10),
-        const Text(
-          'Real-time Monitoring',
-          style: TextStyle(
-            color: AppColors.textGrey,
-            fontSize: 14,
-            letterSpacing: 1.2,
-          ),
-        ),
-        const Text(
-          'Bin Fill Levels', // مطابق لعنوان صورتك
-          style: TextStyle(
-            fontSize: 28,
-            color: AppColors.textLight,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        const Text('Real-time Monitoring', style: TextStyle(color: AppColors.textGrey, fontSize: 14, letterSpacing: 1.2)),
+        const Text('Bin Fill Levels', style: TextStyle(fontSize: 28, color: AppColors.textLight, fontWeight: FontWeight.bold)),
       ],
-    );
-  }
-
-  Widget _buildBinsList() {
-    return Expanded(
-      child: ListView.separated(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 50),
-        itemCount: bins.length,
-        separatorBuilder: (_, index) => const SizedBox(height: 16),
-        itemBuilder: (context, i) {
-          final bin = bins[i];
-          final statusColor = _getStatusColor(bin.fill);
-          return _BinLevelCard(bin: bin, color: statusColor);
-        },
-      ),
     );
   }
 }
@@ -114,7 +135,7 @@ class _BinLevelCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withValues(alpha: 0.4), // تأثير زجاجي معتمد
+        color: AppColors.cardBg.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.cardBorder),
       ),
@@ -146,14 +167,7 @@ class _BinLevelCard extends StatelessWidget {
                 backgroundColor: Colors.white.withValues(alpha: 0.05),
                 valueColor: AlwaysStoppedAnimation(color),
               ),
-              Text(
-                '${(v * 100).toInt()}%',
-                style: const TextStyle(
-                  color: AppColors.textLight,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                ),
-              ),
+              Text('${(v * 100).toInt()}%', style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.w900, fontSize: 16)),
             ],
           );
         },
@@ -168,30 +182,16 @@ class _BinLevelCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              bin.id,
-              style: const TextStyle(
-                color: AppColors.textLight,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
+            Text(bin.id, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold, fontSize: 18)),
             _buildStatusBadge(),
           ],
         ),
         const SizedBox(height: 6),
         Row(
           children: [
-            const Icon(
-              Icons.location_on_rounded,
-              color: AppColors.textGrey,
-              size: 14,
-            ),
+            const Icon(Icons.location_on_rounded, color: AppColors.textGrey, size: 14),
             const SizedBox(width: 4),
-            Text(
-              bin.location,
-              style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
-            ),
+            Text(bin.location, style: const TextStyle(color: AppColors.textGrey, fontSize: 13)),
           ],
         ),
         const SizedBox(height: 15),
@@ -213,27 +213,15 @@ class _BinLevelCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge() {
-    String label = bin.fill >= 0.8
-        ? 'Critical'
-        : bin.fill >= 0.5
-        ? 'Moderate'
-        : 'Good';
+    String label = bin.fill >= 0.8 ? 'Critical' : (bin.fill >= 0.5 ? 'Moderate' : 'Good');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: Text(
-        label.toUpperCase(),
-        style: TextStyle(
-          color: color,
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.5,
-        ),
-      ),
+      child: Text(label.toUpperCase(), style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
     );
   }
 }

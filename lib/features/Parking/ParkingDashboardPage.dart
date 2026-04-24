@@ -5,6 +5,8 @@ import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_color
 import 'StatCard.dart';
 import 'ParkingScreen.dart';
 
+import 'data/services/parking_service.dart';
+
 class ParkingDashboardPage extends StatefulWidget {
   static const routeName = '/ParkingDashboardPage';
   const ParkingDashboardPage({super.key});
@@ -14,6 +16,27 @@ class ParkingDashboardPage extends StatefulWidget {
 }
 
 class _ParkingDashboardPageState extends State<ParkingDashboardPage> {
+  final ParkingService _parkingService = ParkingService();
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    // جلب بيانات لوحة التحكم للزون رقم 1 (أو يمكن تمريره ديناميكياً)
+    final data = await _parkingService.getDashboard(1);
+    if (mounted) {
+      setState(() {
+        _dashboardData = data;
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color primaryNeon = AppColors.primaryNeon;
@@ -94,6 +117,15 @@ class _ParkingDashboardPageState extends State<ParkingDashboardPage> {
   }
 
   Widget _buildQuickStats() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon));
+    }
+
+    final total = _dashboardData?["totalSpaces"]?.toString() ?? "30";
+    final available = _dashboardData?["available"]?.toString() ?? "16";
+    final occupied = _dashboardData?["occupied"]?.toString() ?? "10";
+    final reserved = _dashboardData?["reserved"]?.toString() ?? "4";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -104,12 +136,12 @@ class _ParkingDashboardPageState extends State<ParkingDashboardPage> {
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: AppColors.cardBorder),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _CombinedStatItem(label: 'Total Spaces', value: '30', icon: Icons.local_parking_rounded),
-              _VerticalDivider(),
-              _CombinedStatItem(label: 'Available', value: '16', icon: Icons.check_circle_outline_rounded, isNeon: true),
+              _CombinedStatItem(label: 'Total Spaces', value: total, icon: Icons.local_parking_rounded),
+              const _VerticalDivider(),
+              _CombinedStatItem(label: 'Available', value: available, icon: Icons.check_circle_outline_rounded, isNeon: true),
             ],
           ),
         ),
@@ -119,16 +151,17 @@ class _ParkingDashboardPageState extends State<ParkingDashboardPage> {
           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 15),
-        const Row(
+        Row(
           children: [
-            Expanded(child: StatCard(title: 'Occupied', value: '10', icon: Icons.directions_car_rounded, color: Colors.redAccent)),
-            SizedBox(width: 15),
-            Expanded(child: StatCard(title: 'Reserved', value: '4', icon: Icons.bookmark_rounded, color: Colors.orangeAccent)),
+            Expanded(child: StatCard(title: 'Occupied', value: occupied, icon: Icons.directions_car_rounded, color: Colors.redAccent)),
+            const SizedBox(width: 15),
+            Expanded(child: StatCard(title: 'Reserved', value: reserved, icon: Icons.bookmark_rounded, color: Colors.orangeAccent)),
           ],
         ),
       ],
     );
   }
+
 
   Widget _buildLocationMapSection(Color accent) {
     return Column(

@@ -4,8 +4,9 @@ import 'dart:ui';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 import 'ParkingScreen.dart';
 
+import 'data/services/parking_service.dart';
+
 class MakeReservationPage extends StatefulWidget {
-  // اسم المسار الموحد لضمان عمل الأزرار في الداشبورد
   static const routeName = '/MakeReservationPage';
   const MakeReservationPage({super.key});
 
@@ -14,7 +15,42 @@ class MakeReservationPage extends StatefulWidget {
 }
 
 class _MakeReservationPageState extends State<MakeReservationPage> {
-  String? selectedZone;
+  final ParkingService _parkingService = ParkingService();
+  String? selectedZoneId;
+  final TextEditingController _plateController = TextEditingController();
+  final TextEditingController _startTimeController = TextEditingController(text: DateTime.now().toIso8601String());
+  final TextEditingController _endTimeController = TextEditingController(text: DateTime.now().add(const Duration(hours: 2)).toIso8601String());
+  bool _isSubmitting = false;
+
+  final Map<String, String> zones = {
+    'Spot A1 - Floor 1': '1',
+    'Spot A2 - Floor 1': '2',
+    'Spot B1 - Floor 2': '3',
+  };
+
+  Future<void> _confirmReservation() async {
+    if (selectedZoneId == null || _plateController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final success = await _parkingService.reserveParking(
+      deviceId: selectedZoneId!,
+      plateNumber: _plateController.text,
+      startTime: _startTimeController.text,
+      endTime: _endTimeController.text,
+    );
+    setState(() => _isSubmitting = false);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Reservation successful!")));
+      Navigator.pushNamed(context, ParkingScreen.bookings);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to confirm reservation")));
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +149,9 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
                 'e.g. ABC 1234',
                 Icons.directions_car_filled_rounded,
                 accent,
+                _plateController,
               ),
+
               const SizedBox(height: 25),
 
               Row(
@@ -124,9 +162,10 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
                       children: [
                         _buildFormLabel('START TIME'),
                         _buildModernTextField(
-                          '10:00 AM',
+                          'ISO Date Format',
                           Icons.access_time_filled_rounded,
                           accent,
+                          _startTimeController,
                         ),
                       ],
                     ),
@@ -138,11 +177,13 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
                       children: [
                         _buildFormLabel('END TIME'),
                         _buildModernTextField(
-                          '12:00 PM',
+                          'ISO Date Format',
                           Icons.update_rounded,
                           accent,
+                          _endTimeController,
                         ),
                       ],
+
                     ),
                   ),
                 ],
@@ -150,14 +191,12 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
               const SizedBox(height: 45),
 
               _buildPrimaryButton(
-                'CONFIRM RESERVATION',
+                _isSubmitting ? 'CONFIRMING...' : 'CONFIRM RESERVATION',
                 Icons.verified_user_rounded,
                 accent,
-                () {
-                  // منطق تأكيد الحجز والعودة للسجلات
-                  Navigator.pushNamed(context, ParkingScreen.bookings);
-                },
+                _isSubmitting ? () {} : _confirmReservation,
               ),
+
               const SizedBox(height: 20),
 
               _buildSecondaryButton(
@@ -190,10 +229,12 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
     );
   }
 
-  Widget _buildModernTextField(String hint, IconData icon, Color accent) {
+  Widget _buildModernTextField(String hint, IconData icon, Color accent, TextEditingController controller) {
     return TextField(
+      controller: controller,
       style: const TextStyle(color: Colors.white, fontSize: 14),
       decoration: InputDecoration(
+
         hintText: hint,
         hintStyle: TextStyle(
           color: Colors.white.withOpacity(0.2),
@@ -221,29 +262,30 @@ class _MakeReservationPageState extends State<MakeReservationPage> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          value: selectedZone,
+          value: selectedZoneId,
           hint: const Text(
             'Choose Area',
             style: TextStyle(color: Colors.white24, fontSize: 14),
           ),
           dropdownColor: AppColors.cardBg,
           icon: Icon(Icons.keyboard_arrow_down_rounded, color: accent),
-          items: ['Zone A - Floor 1', 'Zone B - Floor 1', 'Zone C - Floor 2']
+          items: zones.entries
               .map(
-                (String value) => DropdownMenuItem<String>(
-                  value: value,
+                (entry) => DropdownMenuItem<String>(
+                  value: entry.value,
                   child: Text(
-                    value,
+                    entry.key,
                     style: const TextStyle(color: Colors.white, fontSize: 15),
                   ),
                 ),
               )
               .toList(),
-          onChanged: (val) => setState(() => selectedZone = val),
+          onChanged: (val) => setState(() => selectedZoneId = val),
         ),
       ),
     );
   }
+
 
   Widget _buildPrimaryButton(
     String text,

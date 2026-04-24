@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 // استيراد كلاس Bin من ملف الداشبورد
 import 'package:smart_village_for_green_gnergy_optimization/features/waste_management/waste_main.dart';
+import 'data/services/waste_service.dart';
+
 
 class CollectionRequestScreen extends StatefulWidget {
   final List<Bin> bins;
@@ -15,9 +17,12 @@ class CollectionRequestScreen extends StatefulWidget {
 }
 
 class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
+  final WasteService _wasteService = WasteService();
   Bin? selected;
   DateTime? date;
   TimeOfDay? time;
+  bool _isSubmitting = false;
+
 
   // دالة اختيار التاريخ مع ثيم نيون موحد
   Future<void> pickDate() async {
@@ -56,6 +61,45 @@ class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
     );
   }
 
+  Future<void> _submitRequest() async {
+    if (selected == null || date == null || time == null) return;
+
+    setState(() => _isSubmitting = true);
+
+    // دمج التاريخ والوقت في صيغة ISO
+    final scheduledDateTime = DateTime(
+      date!.year,
+      date!.month,
+      date!.day,
+      time!.hour,
+      time!.minute,
+    ).toIso8601String();
+
+    final success = await _wasteService.schedulePickup(
+      binId: int.tryParse(selected!.id) ?? 0,
+      scheduledDateTime: scheduledDateTime,
+    );
+
+    setState(() => _isSubmitting = false);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pickup Request Sent Successfully! ✅'),
+          backgroundColor: AppColors.primaryNeon,
+        ),
+      );
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to schedule pickup. Please try again.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   void sendRequest() {
     if (selected == null || date == null || time == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,6 +112,7 @@ class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
     }
     _showConfirmationDialog();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -270,11 +315,13 @@ class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
       width: double.infinity,
       height: 65,
       child: ElevatedButton.icon(
-        onPressed: sendRequest,
-        icon: const Icon(Icons.send_rounded, size: 20),
-        label: const Text(
-          'CONFIRM SCHEDULE',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2),
+        onPressed: _isSubmitting ? null : sendRequest,
+        icon: _isSubmitting 
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textDark))
+          : const Icon(Icons.send_rounded, size: 20),
+        label: Text(
+          _isSubmitting ? 'SENDING...' : 'CONFIRM SCHEDULE',
+          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryNeon,
@@ -287,6 +334,7 @@ class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
       ),
     );
   }
+
 
   Widget _buildLabel(String text) {
     return Text(
@@ -332,15 +380,14 @@ class _CollectionRequestScreenState extends State<CollectionRequestScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  const SnackBar(content: Text('Request Sent! ✅')),
-                );
+                _submitRequest();
               },
               child: const Text(
                 'CONFIRM',
                 style: TextStyle(color: AppColors.primaryNeon),
               ),
             ),
+
           ],
         ),
       ),

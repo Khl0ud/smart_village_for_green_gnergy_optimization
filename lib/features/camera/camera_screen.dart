@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'MainShell.dart';
+import 'main_shell.dart';
 
 /// Camera module widget — part of the larger app.
 /// This file no longer creates a standalone `MaterialApp` or `main()`.

@@ -1,21 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:ui';
-
 // استيراد ملف الألوان المركزي والصفحات المطلوبة للربط
+
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-import 'SurveillanceGridPage.dart';
+import 'surveillance_grid_page.dart';
 import 'gate_logs_page.dart';
-import 'ReportsPage.dart';
+import 'reports_page.dart';
+
+
 import '../settings/SettingsPage.dart';
 
-class HomeDashboardPage extends StatelessWidget {
+import 'package:smart_village_for_green_gnergy_optimization/core/services/camera_service.dart';
+
+class HomeDashboardPage extends StatefulWidget {
   const HomeDashboardPage({super.key});
 
   @override
+  State<HomeDashboardPage> createState() => _HomeDashboardPageState();
+}
+
+class _HomeDashboardPageState extends State<HomeDashboardPage> {
+  final CameraService _cameraService = CameraService();
+  List<dynamic> _cameras = [];
+  bool _isLoadingCameras = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCameras();
+  }
+
+  Future<void> _fetchCameras() async {
+    final cameras = await _cameraService.getAllCameras();
+    if (mounted) {
+      setState(() {
+        _cameras = cameras;
+        _isLoadingCameras = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // استخدام الألوان الموحدة لضمان التناسق المعماري
     const Color mainBg = AppColors.scaffoldBg;
     const Color primaryNeon = AppColors.primaryNeon;
 
@@ -42,71 +69,56 @@ class HomeDashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // مربع البحث بتصميم Glassmorphism
               _buildSearchBar(primaryNeon),
-
               const SizedBox(height: 30),
 
-              // قسم التقارير الذكية (يربط بـ ReportsPage)
               _buildSectionTitle('Smart Analysis'),
               const SizedBox(height: 12),
               _buildReportsCard(context, primaryNeon),
-
               const SizedBox(height: 30),
 
-              // قسم الكاميرات المباشرة (يربط بـ SurveillanceGridPage)
               _buildSectionTitle('Live Surveillance'),
               const SizedBox(height: 12),
-              _buildCameraHero(
-                context,
-                title: 'Living Room',
-                asset: 'assets/living_room.png',
-                status: 'Live',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const SurveillanceGridPage(),
-                  ),
-                ),
-              ).animate().fadeIn().slideX(begin: -0.1),
-
-              const SizedBox(height: 16),
-
-              _buildCameraHero(
-                context,
-                title: 'Main Entrance',
-                asset: 'assets/farm_robot.jpg',
-                status: 'Recording',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const SurveillanceGridPage(),
-                  ),
-                ),
-              ).animate().fadeIn().slideX(begin: 0.1),
+              
+              _isLoadingCameras 
+                ? const Center(child: CircularProgressIndicator(color: primaryNeon))
+                : _cameras.isEmpty
+                    ? const Text("No cameras connected.", style: TextStyle(color: AppColors.textGrey))
+                    : Column(
+                        children: _cameras.map((camera) {
+                          // عرض الكاميرات القادمة من السيرفر
+                          final name = camera['name'] ?? 'Unknown Camera';
+                          final status = (camera['status'] ?? 'Offline').toString();
+                          
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: _buildCameraHero(
+                              context,
+                              title: name,
+                              // نستخدم صورة افتراضية أو صورة قادمة من السيرفر
+                              asset: 'assets/living_room.png', 
+                              status: status,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SurveillanceGridPage(),
+                                ),
+                              ),
+                            ).animate().fadeIn().slideX(),
+                          );
+                        }).toList(),
+                      ),
 
               const SizedBox(height: 30),
 
-              // قسم النشاطات الأخيرة (يربط بـ GateLogsPage)
               _buildRecentActivityHeader(context, primaryNeon),
               const SizedBox(height: 12),
 
               _buildHistoryTile(
                 context,
                 title: 'Motion Detected',
-                subtitle: 'Kitchen • 7:30 PM',
+                subtitle: 'Gate Access • Check Logs',
                 icon: Icons.run_circle_outlined,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GateLogsPage()),
-                ),
-              ),
-
-              _buildHistoryTile(
-                context,
-                title: 'Gate Accessed',
-                subtitle: 'Garage • 3:34 AM',
-                icon: Icons.login_rounded,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const GateLogsPage()),
@@ -147,7 +159,7 @@ class HomeDashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withOpacity(0.5),
+        color: AppColors.cardBg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: AppColors.cardBorder),
       ),
@@ -186,16 +198,16 @@ class HomeDashboardPage extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.cardBg.withOpacity(0.4),
+          color: AppColors.cardBg.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: accent.withOpacity(0.2)),
+          border: Border.all(color: accent.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.1),
+                color: accent.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.analytics_rounded, color: accent, size: 30),
@@ -242,7 +254,7 @@ class HomeDashboardPage extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Container(
           decoration: BoxDecoration(
@@ -251,8 +263,8 @@ class HomeDashboardPage extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.1),
-                Colors.black.withOpacity(0.8),
+                Colors.black.withValues(alpha: 0.1),
+                Colors.black.withValues(alpha: 0.8),
               ],
             ),
           ),
@@ -356,7 +368,7 @@ class HomeDashboardPage extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.cardBg.withOpacity(0.4),
+          color: AppColors.cardBg.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.cardBorder),
         ),
@@ -365,7 +377,7 @@ class HomeDashboardPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.primaryNeon.withOpacity(0.1),
+                color: AppColors.primaryNeon.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: AppColors.primaryNeon, size: 24),

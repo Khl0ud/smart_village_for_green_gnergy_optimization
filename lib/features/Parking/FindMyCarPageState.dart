@@ -4,8 +4,9 @@ import 'dart:ui';
 import '../../core/theme/app_colors.dart';
 import 'StatCard.dart';
 
+import 'data/services/parking_service.dart';
+
 class FindMyCarPage extends StatefulWidget {
-  // اسم المسار الموحد لضمان عمل الأزرار في الداشبورد
   static const routeName = '/FindMyCarPageState';
   const FindMyCarPage({super.key});
 
@@ -14,6 +15,26 @@ class FindMyCarPage extends StatefulWidget {
 }
 
 class _FindMyCarPageState extends State<FindMyCarPage> {
+  final ParkingService _parkingService = ParkingService();
+  bool _isLoading = false;
+  Map<String, dynamic>? _carLocation;
+  final TextEditingController _deviceController = TextEditingController(text: "48484848");
+
+  Future<void> _locateCar() async {
+    setState(() => _isLoading = true);
+    final result = await _parkingService.findMyCar(_deviceController.text);
+    setState(() {
+      _carLocation = result;
+      _isLoading = false;
+    });
+    
+    if (result == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Car not found or error occurred")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color primaryNeon = AppColors.primaryNeon;
@@ -36,9 +57,12 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildSearchField(primaryNeon),
+                        const SizedBox(height: 20),
                         _buildSectionLabel(
-                          'Your Car is here',
+                          _isLoading ? 'Searching...' : 'Your Car is here',
                         ), // النص مطابق للصورة
+
                         _buildMapDisplay(primaryNeon),
                         const SizedBox(height: 25),
                         _buildLocationDetails(),
@@ -149,13 +173,16 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
   }
 
   Widget _buildLocationDetails() {
-    return const Row(
+    String parkingNo = _carLocation?["parkingNo"]?.toString() ?? "C4";
+    String zone = _carLocation?["zone"]?.toString() ?? "2";
+
+    return Row(
       children: [
         // استخدام Expanded مع StatCard المحدث يحل مشكلة الـ Overflow
         Expanded(
           child: StatCard(
             title: 'Parking no', // مطابق للصورة
-            value: 'C4',
+            value: parkingNo,
             icon: Icons.grid_view_rounded,
           ),
         ),
@@ -163,13 +190,14 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
         Expanded(
           child: StatCard(
             title: 'Zone', // مطابق للصورة
-            value: '2',
+            value: zone,
             icon: Icons.layers_rounded,
           ),
         ),
       ],
     );
   }
+
 
   Widget _buildActionButtons(Color accent) {
     return Row(
@@ -179,6 +207,7 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
             'Flash Lights',
             Icons.wb_sunny_rounded,
             accent,
+            _locateCar,
           ),
         ),
         const SizedBox(width: 15),
@@ -187,13 +216,39 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
             'Sound Alarm',
             Icons.volume_up_rounded,
             accent,
+            _locateCar,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSmallAction(String title, IconData icon, Color accent) {
+  Widget _buildSearchField(Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: TextField(
+        controller: _deviceController,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: "Enter Device ID...",
+          hintStyle: const TextStyle(color: AppColors.textGrey),
+          border: InputBorder.none,
+          suffixIcon: _isLoading 
+            ? const SizedBox(width: 20, height: 20, child: Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryNeon)))
+            : IconButton(icon: Icon(Icons.search, color: accent), onPressed: _locateCar),
+        ),
+        onSubmitted: (_) => _locateCar(),
+      ),
+    );
+  }
+
+  Widget _buildSmallAction(String title, IconData icon, Color accent, VoidCallback onTap) {
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -206,7 +261,7 @@ class _FindMyCarPageState extends State<FindMyCarPage> {
             border: Border.all(color: AppColors.cardBorder),
           ),
           child: InkWell(
-            onTap: () {},
+            onTap: onTap,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

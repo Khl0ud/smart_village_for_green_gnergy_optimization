@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'dart:ui';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية لمشروعكِ
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -11,12 +11,46 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  // بيانات حقيقية قادمة من حساسات الـ ESP32
-  int rainPercent = 45; // القيمة المستلمة من متغير rainPercent في كود Arduino
-  double temp = 23.0;   // القيمة المستلمة من حساس DHT11
-  int humidity = 60;    // القيمة المستلمة من حساس DHT11
+  final SensorService _sensorService = SensorService();
+  Timer? _refreshTimer;
 
-  // دالة لتحديد وصف حالة المطر بناءً على النسبة المئوية للحساس
+  // بيانات حقيقية قادمة من السيرفر
+  int rainPercent = 0; 
+  double temp = 0.0;   
+  int humidity = 0;    
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeatherData();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) => _fetchWeatherData());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchWeatherData() async {
+    final readings = await _sensorService.getLatestReadings(1);
+    
+    if (mounted) {
+      setState(() {
+        for (var r in readings) {
+          final type = r['type']?.toString() ?? '';
+          final value = (r['value'] ?? 0.0).toDouble();
+          
+          if (type == 'Rain' || type == '4') rainPercent = value.toInt().clamp(0, 100);
+          if (type == 'Temperature' || type == '0') temp = value;
+          if (type == 'Humidity' || type == '2') humidity = value.toInt();
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
   String _getRainDescription(int percent) {
     if (percent <= 5) return "Clear Sky";
     if (percent < 30) return "Light Drizzle";
@@ -27,41 +61,39 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة
+      backgroundColor: AppColors.scaffoldBg,
       body: Stack(
         children: [
           _buildBackgroundGradient(),
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 10),
-                  
-                  // عرض الموقع والحرارة الحقيقية من DHT11
-                  const Text("Asyut, Garden Area", style: TextStyle(color: AppColors.textLight, fontSize: 26, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  Text("${temp.toInt()}°", style: const TextStyle(color: AppColors.textLight, fontSize: 64, fontWeight: FontWeight.w200)),
-                  Text(_getRainDescription(rainPercent), style: const TextStyle(color: AppColors.textGrey, fontSize: 18)),
-
-                  const SizedBox(height: 40),
-                  _buildSectionTitle("Live Garden Sensors"),
-                  const SizedBox(height: 20),
-
-                  // كارت شدة المطر اللحظي (Local Rain Intensity)
-                  _buildRainIntensityCard(),
-
-                  const SizedBox(height: 25),
-                  
-                  // شبكة المعلومات البيئية الإضافية
-                  _buildEnvironmentalGrid(),
-                  const SizedBox(height: 50),
-                ],
-              ),
-            ),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+              : RefreshIndicator(
+                  onRefresh: _fetchWeatherData,
+                  color: AppColors.primaryNeon,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _buildHeader(context),
+                        const SizedBox(height: 10),
+                        const Text("Garden Weather Area", style: TextStyle(color: AppColors.textLight, fontSize: 24, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 5),
+                        Text("${temp.toInt()}°", style: const TextStyle(color: AppColors.textLight, fontSize: 64, fontWeight: FontWeight.w200)),
+                        Text(_getRainDescription(rainPercent), style: const TextStyle(color: AppColors.textGrey, fontSize: 18)),
+                        const SizedBox(height: 40),
+                        _buildSectionTitle("Live Garden Sensors"),
+                        const SizedBox(height: 20),
+                        _buildRainIntensityCard(),
+                        const SizedBox(height: 25),
+                        _buildEnvironmentalGrid(),
+                        const SizedBox(height: 50),
+                      ],
+                    ),
+                  ),
+                ),
           ),
         ],
       ),
@@ -88,15 +120,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textLight, size: 22),
           onPressed: () => Navigator.pop(context),
         ),
-        const CircleAvatar(
-          backgroundColor: AppColors.cardBg,
-          child: Icon(Icons.sensors_rounded, color: AppColors.primaryNeon, size: 20),
+        IconButton(
+          onPressed: _fetchWeatherData,
+          icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryNeon, size: 22),
         ),
       ],
     );
   }
 
-  // كارت يعرض شدة المطر بناءً على قراءة rainPercent من الحساس
   Widget _buildRainIntensityCard() {
     return Container(
       padding: const EdgeInsets.all(25),
@@ -118,7 +149,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
           LinearProgressIndicator(
             value: rainPercent / 100,
             backgroundColor: Colors.white10,
-            color: AppColors.info, // استخدام اللون الأزرق للمطر
+            color: AppColors.info,
             minHeight: 12,
             borderRadius: BorderRadius.circular(10),
           ),
@@ -137,7 +168,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       children: [
         Expanded(child: _buildSmallInfoCard("HUMIDITY", "$humidity%", Icons.water_drop_rounded, AppColors.info)),
         const SizedBox(width: 15),
-        Expanded(child: _buildSmallInfoCard("AIR QUALITY", "Low Risk", Icons.air_rounded, AppColors.primaryNeon)),
+        Expanded(child: _buildSmallInfoCard("AIR QUALITY", "Optimal", Icons.air_rounded, AppColors.primaryNeon)),
       ],
     );
   }

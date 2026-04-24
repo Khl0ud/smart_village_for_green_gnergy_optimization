@@ -4,14 +4,52 @@ import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_color
 // استيراد كلاس Bin من الملف الرئيسي للموديول
 import 'waste_main.dart';
 
-class DashboardScreen extends StatelessWidget {
-  final List<Bin> bins;
+import 'data/services/waste_service.dart';
 
-  const DashboardScreen({super.key, required this.bins});
+class DashboardScreen extends StatefulWidget {
+  final List<Bin>? initialBins;
 
-  // حساب متوسط امتلاء كافة الصناديق برمجياً
-  double get avgFill =>
-      bins.isEmpty ? 0.0 : (bins.fold(0.0, (p, e) => p + e.fill) / bins.length);
+  const DashboardScreen({super.key, this.initialBins});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final WasteService _wasteService = WasteService();
+  Map<String, dynamic>? _dashboardData;
+  bool _isLoading = true;
+  List<Bin> bins = [];
+
+  @override
+  void initState() {
+    super.initState();
+    bins = widget.initialBins ?? [];
+    _fetchDashboardData();
+  }
+
+  Future<void> _fetchDashboardData() async {
+    final data = await _wasteService.getDashboard(1); // افترضنا Zone 1
+    if (mounted) {
+      setState(() {
+        _dashboardData = data;
+        if (data != null && data['binsDetails'] != null) {
+          bins = (data['binsDetails'] as List).map((b) => Bin(
+            id: b['id']?.toString() ?? '0',
+            location: b['name'] ?? 'Unknown',
+            fill: (b['fillLevel'] ?? 0.0).toDouble() / 100.0,
+            type: 'General',
+          )).toList();
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  // جلب متوسط الامتلاء مباشرة من السيرفر
+  double get avgFill => _dashboardData?['averageFillPercentage']?.toDouble() / 100.0 ?? 
+      (bins.isEmpty ? 0.0 : (bins.fold(0.0, (p, e) => p + e.fill) / bins.length));
+
 
   @override
   Widget build(BuildContext context) {
@@ -21,45 +59,52 @@ class DashboardScreen extends StatelessWidget {
         children: [
           _buildBackgroundGradient(),
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40),
-                  _buildHeader(),
-                  const SizedBox(height: 30),
-
-                  // كارت الإحصائيات الرئيسي بتصميم زجاجي (Overall Status)
-                  _TopStatCard(
-                    avgFill: avgFill,
-                    total: bins.length,
-                    criticalCount: bins.where((b) => b.fill >= 0.8).length,
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+              : RefreshIndicator(
+                  onRefresh: _fetchDashboardData,
+                  color: AppColors.primaryNeon,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40),
+                        _buildHeader(),
+                        const SizedBox(height: 30),
+      
+                        // كارت الإحصائيات الرئيسي بتصميم زجاجي (Overall Status)
+                        _TopStatCard(
+                          avgFill: avgFill,
+                          total: bins.length,
+                          criticalCount: bins.where((b) => b.fill >= 0.8).length,
+                        ),
+      
+                        const SizedBox(height: 35),
+                        _buildSectionTitle('Category Analysis'),
+                        const SizedBox(height: 15),
+      
+                        // قائمة الكروت الأفقية لتحليل الحالة
+                        _buildCategoryAnalysis(),
+      
+                        const SizedBox(height: 35),
+                        _buildSectionTitle('Recent System Alerts'),
+                        const SizedBox(height: 15),
+      
+                        // قائمة التنبيهات الأخيرة بنظام نيون
+                        _buildAlertsList(),
+                        const SizedBox(height: 50),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 35),
-                  _buildSectionTitle('Category Analysis'),
-                  const SizedBox(height: 15),
-
-                  // قائمة الكروت الأفقية لتحليل الحالة
-                  _buildCategoryAnalysis(),
-
-                  const SizedBox(height: 35),
-                  _buildSectionTitle('Recent System Alerts'),
-                  const SizedBox(height: 15),
-
-                  // قائمة التنبيهات الأخيرة بنظام نيون
-                  _buildAlertsList(),
-                  const SizedBox(height: 50),
-                ],
-              ),
-            ),
+                ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildBackgroundGradient() {
     return Container(
@@ -113,20 +158,17 @@ class DashboardScreen extends StatelessWidget {
     final List<Map<String, dynamic>> categories = [
       {
         'label': 'Critical',
-        'value': bins.where((b) => b.fill >= 0.8).length.toString(),
+        'value': _dashboardData?['criticalCount']?.toString() ?? bins.where((b) => b.fill >= 0.8).length.toString(),
         'color': AppColors.danger,
       },
       {
         'label': 'Moderate',
-        'value': bins
-            .where((b) => b.fill >= 0.5 && b.fill < 0.8)
-            .length
-            .toString(),
+        'value': _dashboardData?['moderateCount']?.toString() ?? bins.where((b) => b.fill >= 0.5 && b.fill < 0.8).length.toString(),
         'color': AppColors.warning,
       },
       {
-        'label': 'Empty',
-        'value': bins.where((b) => b.fill < 0.5).length.toString(),
+        'label': 'Healthy',
+        'value': _dashboardData?['healthyCount']?.toString() ?? bins.where((b) => b.fill < 0.5).length.toString(),
         'color': AppColors.primaryNeon,
       },
       {'label': 'Pending', 'value': "2", 'color': AppColors.info},

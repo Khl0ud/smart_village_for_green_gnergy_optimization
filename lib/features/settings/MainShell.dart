@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-import 'Dashboard.dart';
+import 'dashboard.dart';
+
 import 'SettingsPage.dart';
 import 'notifications_page.dart';
 import 'ProfileScreen.dart';
@@ -18,7 +19,6 @@ class _MainShellState extends State<MainShell> {
   final List<Widget> _pages = [
     const DashboardHomePage(),
     const NotificationsPage(),
-    const ProfileScreen(),
     const SettingsPage(),
     const NeighborsPage(),
   ];
@@ -64,10 +64,6 @@ class _MainShellState extends State<MainShell> {
               label: 'Alerts',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'Profile',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.settings_rounded),
               label: 'Settings',
             ),
@@ -80,4 +76,5 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+
 }

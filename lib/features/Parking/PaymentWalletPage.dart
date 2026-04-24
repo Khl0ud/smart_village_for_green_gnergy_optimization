@@ -3,8 +3,9 @@ import 'dart:ui';
 // استيراد ملف الألوان المركزي لضمان الربط المعماري للمشروع
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 
+import 'data/services/parking_service.dart';
+
 class PaymentWalletPage extends StatefulWidget {
-  // اسم المسار الموحد لضمان عمل الأزرار في الداشبورد
   static const routeName = '/PaymentWalletPage'; 
   const PaymentWalletPage({super.key});
 
@@ -13,7 +14,37 @@ class PaymentWalletPage extends StatefulWidget {
 }
 
 class _PaymentWalletPageState extends State<PaymentWalletPage> {
+  final ParkingService _parkingService = ParkingService();
   int _selectedTabIndex = 0;
+  double _balance = 0.0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBalance();
+  }
+
+  Future<void> _fetchBalance() async {
+    final data = await _parkingService.getDashboard(1);
+    if (mounted) {
+      setState(() {
+        _balance = (data?["walletBalance"] ?? 0.0).toDouble();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _addFunds() async {
+    // محاكاة إضافة 50 دولار
+    setState(() => _isLoading = true);
+    final success = await _parkingService.addFunds(50.0);
+    if (success) {
+      await _fetchBalance();
+    }
+    setState(() => _isLoading = false);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -142,20 +173,23 @@ class _PaymentWalletPageState extends State<PaymentWalletPage> {
         children: [
           Icon(Icons.account_balance_wallet_rounded, size: 80, color: accent),
           const SizedBox(height: 20),
-          const Text(
-            '\$250.00', // الرصيد مطابق للمحتوى المطلوب
-            style: TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900),
-          ),
+          _isLoading 
+            ? const CircularProgressIndicator(color: AppColors.primaryNeon)
+            : Text(
+                '\$${_balance.toStringAsFixed(2)}',
+                style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900),
+              ),
           const Text(
             'AVAILABLE CREDITS',
             style: TextStyle(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 2),
           ),
           const SizedBox(height: 40),
-          _buildActionButton('ADD FUNDS', Icons.add_circle_rounded, accent),
+          _buildActionButton('ADD FUNDS', Icons.add_circle_rounded, accent, _addFunds),
         ],
       ),
     );
   }
+
 
   Widget _buildBankCardTab(Color accent) {
     return Container(
@@ -195,8 +229,12 @@ class _PaymentWalletPageState extends State<PaymentWalletPage> {
             ],
           ),
           const SizedBox(height: 35),
-          _buildActionButton('SAVE CARD', Icons.shield_rounded, accent),
+          _buildActionButton('SAVE CARD', Icons.shield_rounded, accent, () {
+            // منطق حفظ البطاقة
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Card saved successfully")));
+          }),
         ],
+
       ),
     );
   }
@@ -226,12 +264,12 @@ class _PaymentWalletPageState extends State<PaymentWalletPage> {
     );
   }
 
-  Widget _buildActionButton(String text, IconData icon, Color accent) {
+  Widget _buildActionButton(String text, IconData icon, Color accent, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton.icon(
-        onPressed: () {},
+        onPressed: onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: accent,
           foregroundColor: Colors.black,
@@ -242,4 +280,5 @@ class _PaymentWalletPageState extends State<PaymentWalletPage> {
       ),
     );
   }
+
 }

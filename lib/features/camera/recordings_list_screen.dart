@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'api_service.dart'; // تأكدي أن الملف بنفس الاسم في مشروعك
+import 'package:smart_village_for_green_gnergy_optimization/core/services/camera_service.dart';
+
 import 'video_player_screen.dart';
 
 class RecordingsListScreen extends StatefulWidget {
@@ -13,15 +14,16 @@ class RecordingsListScreen extends StatefulWidget {
 }
 
 class _RecordingsListScreenState extends State<RecordingsListScreen> {
-  final CameraApiService api = CameraApiService();
+  final CameraService _cameraService = CameraService();
   late Future<List<dynamic>> recordingsFuture;
+
 
   @override
   void initState() {
     super.initState();
-    // طلب قائمة التسجيلات من الـ API للكاميرا المحددة
-    recordingsFuture = api.getRecordings(widget.cameraId);
+    recordingsFuture = _cameraService.getRecordings(widget.cameraId.toString());
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +62,9 @@ class _RecordingsListScreenState extends State<RecordingsListScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => VideoPlayerScreen(
-                          url: rec['fullFileUrl'], // الرابط الكامل للفيديو
+                          url: rec['fullVideoUrl'] ?? rec['fileUrl'], // استخدام الرابط الكامل من السيرفر
                           title: "عرض تسجيل ${widget.cameraName}",
+
                         ),
                       ),
                     );

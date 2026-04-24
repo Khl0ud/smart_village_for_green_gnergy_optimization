@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'recordings_list_screen.dart';
 
 class LiveScreen extends StatefulWidget {
+  final int cameraId;
   final String url;
   final String cameraName;
 
-  LiveScreen({required this.url, required this.cameraName});
+  const LiveScreen({super.key, required this.cameraId, required this.url, required this.cameraName});
+
 
   @override
   _LiveScreenState createState() => _LiveScreenState();
@@ -64,7 +67,25 @@ class _LiveScreenState extends State<LiveScreen> {
       appBar: AppBar(
         title: Text(widget.cameraName),
         backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.video_library, color: Colors.white),
+            tooltip: 'عرض التسجيلات السابقة',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecordingsListScreen(
+                    cameraId: widget.cameraId,
+                    cameraName: widget.cameraName,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
+
       body: Center(
         child: _hasError
           ? Column(

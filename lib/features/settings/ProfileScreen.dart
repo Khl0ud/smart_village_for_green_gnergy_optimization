@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
-// استيراد ملف الألوان المركزي من مجلد core
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'data/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,16 +13,57 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
+  bool _isLoading = true;
+  final AuthService _authService = AuthService();
 
-  // تعريف المتحكمات ببياناتك الشخصية المحدثة
-  final TextEditingController _firstNameController = TextEditingController(text: "Khuloud");
-  final TextEditingController _lastNameController = TextEditingController(text: "Osama");
-  final TextEditingController _emailController = TextEditingController(text: "khuloud.it@tech.edu");
-  final TextEditingController _phoneController = TextEditingController(text: "+20 100 000 0000");
+  // تعريف المتحكمات
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController(text: "********");
 
   @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final data = await _authService.getProfile();
+    if (data != null && mounted) {
+      setState(() {
+        // لو السيرفر بيبعت fullName بنقسمه، ولو بيبعتهم منفصلين بناخدهم
+        String fullName = data['fullName'] ?? '';
+        if (fullName.isNotEmpty) {
+          var parts = fullName.split(' ');
+          _firstNameController.text = parts.isNotEmpty ? parts[0] : '';
+          _lastNameController.text = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+        } else {
+          _firstNameController.text = data['firstName'] ?? '';
+          _lastNameController.text = data['lastName'] ?? '';
+        }
+        
+        _emailController.text = data['email'] ?? '';
+        _phoneController.text = data['phoneNumber'] ?? '';
+        _isLoading = false;
+
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.scaffoldBg,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryNeon)),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg, // استخدام اللون الموحد من Core
       body: Stack(
@@ -41,24 +82,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildProfileAvatar(),
                   const SizedBox(height: 16),
                   
-                  // اسم المستخدم بناءً على البيانات المحفوظة
+                  // اسم المستخدم بناءً على البيانات المستلمة
                   Text(
-                    "Khuloud Osama",
+                    "${_firstNameController.text} ${_lastNameController.text}",
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textLight,
                     ),
                   ),
-                  _buildEditToggleBtn(),
-                  const SizedBox(height: 30),
 
                   // حقول الإدخال المنسقة
                   _buildTextField("FIRST NAME", _firstNameController),
                   _buildTextField("LAST NAME", _lastNameController),
-                  _buildTextField("EMAIL ADDRESS", _emailController),
+                  _buildTextField("EMAIL ADDRESS", _emailController, isReadOnly: true),
                   _buildTextField("PHONE NUMBER", _phoneController),
-                  _buildTextField("PASSWORD", _passwordController, obscure: true),
+                  const SizedBox(height: 15),
+                  _buildChangePasswordBtn(),
+
+
+
 
                   const SizedBox(height: 40),
                   if (_isEditing) _buildSaveButton(),
@@ -104,10 +147,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontSize: 20,
           ),
         ),
-        const SizedBox(width: 45),
+        TextButton(
+          onPressed: () => setState(() => _isEditing = !_isEditing),
+          child: Text(
+            _isEditing ? "Done" : "Edit",
+            style: const TextStyle(color: AppColors.primaryNeon, fontWeight: FontWeight.bold),
+          ),
+        ),
       ],
     );
   }
+
 
   Widget _buildProfileAvatar() {
     return Stack(
@@ -122,11 +172,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               BoxShadow(color: AppColors.primaryNeon.withOpacity(0.2), blurRadius: 20, spreadRadius: 2)
             ],
           ),
-          child: const CircleAvatar(
+          child: CircleAvatar(
             radius: 60,
-            backgroundColor: AppColors.cardBg,
-            backgroundImage: NetworkImage("https://cdn-icons-png.flaticon.com/512/147/147144.png"), 
+            backgroundColor: AppColors.primaryNeon.withOpacity(0.1),
+            child: Text(
+              _firstNameController.text.isNotEmpty ? _firstNameController.text[0].toUpperCase() : '?',
+              style: GoogleFonts.poppins(
+                fontSize: 45,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryNeon,
+              ),
+            ),
           ),
+
         ),
         if (_isEditing)
           Container(
@@ -149,6 +207,151 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildChangePasswordBtn() {
+    return Container(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: () => _showChangePasswordDialog(context),
+        icon: const Icon(Icons.lock_reset_rounded, color: AppColors.primaryNeon),
+        label: const Text(
+          "CHANGE PASSWORD",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.1),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: AppColors.cardBg.withOpacity(0.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        ),
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final TextEditingController currentPassController = TextEditingController();
+    final TextEditingController newPassController = TextEditingController();
+    final TextEditingController confirmPassController = TextEditingController();
+    
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: AlertDialog(
+            backgroundColor: AppColors.cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25), 
+              side: const BorderSide(color: AppColors.cardBorder),
+            ),
+            title: Text(
+              "Change Password",
+              style: GoogleFonts.poppins(color: AppColors.primaryNeon, fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDialogTextField(
+                  "Current Password", 
+                  currentPassController, 
+                  obscureCurrent,
+                  onToggle: () => setDialogState(() => obscureCurrent = !obscureCurrent),
+                ),
+                const SizedBox(height: 15),
+                _buildDialogTextField(
+                  "New Password", 
+                  newPassController, 
+                  obscureNew,
+                  onToggle: () => setDialogState(() => obscureNew = !obscureNew),
+                ),
+                const SizedBox(height: 15),
+                _buildDialogTextField(
+                  "Confirm New Password", 
+                  confirmPassController, 
+                  obscureConfirm,
+                  onToggle: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("CANCEL", style: TextStyle(color: AppColors.textGrey)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (newPassController.text != confirmPassController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Passwords don't match!")));
+                    return;
+                  }
+                  
+                  final success = await _authService.changePassword(
+                    currentPassController.text,
+                    newPassController.text,
+                  );
+
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success ? "Password changed successfully!" : "Failed to change password"),
+                        backgroundColor: success ? Colors.green : Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryNeon,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: const Text("UPDATE", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogTextField(String label, TextEditingController controller, bool obscure, {VoidCallback? onToggle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black26,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscure,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                  color: AppColors.textGrey,
+                  size: 18,
+                ),
+                onPressed: onToggle,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+
   Widget _buildSaveButton() {
     return Container(
       width: double.infinity,
@@ -160,11 +363,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: () {
-          setState(() => _isEditing = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!'), backgroundColor: AppColors.cardBg),
-          );
+        onPressed: () async {
+          setState(() => _isLoading = true);
+          
+          final fullName = "${_firstNameController.text} ${_lastNameController.text}";
+          final success = await _authService.updateProfile(fullName, _phoneController.text);
+
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              if (success) _isEditing = false;
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(success ? 'Profile updated successfully!' : 'Failed to update profile'),
+                backgroundColor: success ? Colors.green : Colors.red,
+              ),
+            );
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryNeon,
@@ -177,7 +394,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool obscure = false}) {
+
+  Widget _buildTextField(String label, TextEditingController controller, {bool obscure = false, bool isReadOnly = false}) {
+    bool canEdit = _isEditing && !isReadOnly;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
@@ -193,17 +412,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              color: _isEditing ? Colors.black.withOpacity(0.2) : AppColors.cardBg.withOpacity(0.3),
+              color: canEdit ? Colors.black.withOpacity(0.2) : AppColors.cardBg.withOpacity(0.3),
               borderRadius: BorderRadius.circular(15),
               border: Border.all(
-                color: _isEditing ? AppColors.primaryNeon.withOpacity(0.3) : AppColors.cardBorder,
+                color: canEdit ? AppColors.primaryNeon.withOpacity(0.3) : AppColors.cardBorder,
               ),
             ),
             child: TextFormField(
               controller: controller,
               obscureText: obscure,
-              enabled: _isEditing,
-              style: TextStyle(color: _isEditing ? Colors.white : Colors.white38, fontSize: 15),
+              enabled: canEdit,
+              style: TextStyle(color: canEdit ? Colors.white : (isReadOnly ? Colors.white24 : Colors.white38), fontSize: 15),
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -215,3 +434,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

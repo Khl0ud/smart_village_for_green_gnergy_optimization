@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية لمشروعكِ
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
 
 class FarmingControlScreen extends StatefulWidget {
   const FarmingControlScreen({super.key});
@@ -11,47 +13,100 @@ class FarmingControlScreen extends StatefulWidget {
 }
 
 class _FarmingControlScreenState extends State<FarmingControlScreen> {
-  // متغيرات تمثل القراءات القادمة من ESP32
-  double temperature = 23.0; // من حساس DHT11
-  double humidity = 35.0; // من حساس DHT11
-  double soilPercent = 0.55; // محسوبة من soilPercent (0.0 to 1.0)
-  bool isPumpOn = false; // تعكس حالة RELAY_PIN
-  bool isValveOpen = false; // تعكس حالة RELAY2_PIN
+  final SensorService _sensorService = SensorService();
+  final DeviceService _deviceService = DeviceService();
+  Timer? _refreshTimer;
+
+  // متغيرات تمثل القراءات القادمة من السيرفر
+  double temperature = 0.0; 
+  double humidity = 0.0; 
+  double soilPercent = 0.0; 
+  bool isPumpOn = false; 
+  bool isValveOpen = false; 
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+    // تحديث تلقائي كل 10 ثوانٍ
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchData());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    // جلب البيانات من المنطقة 2 (عادة ما تكون للحديقة) أو 1 حسب توزيع المشروع
+    // سأقوم بجلب بيانات المنطقة 1 و 2 لضمان الحصول على البيانات
+    final sensorReadings = await _sensorService.getLatestReadings(1);
+    final devices = await _deviceService.getDevicesByZone(1);
+
+    if (mounted) {
+      setState(() {
+        // تحديث الحساسات
+        for (var r in sensorReadings) {
+          final type = r['type']?.toString() ?? '';
+          final value = (r['value'] ?? 0.0).toDouble();
+          
+          if (type == 'Temperature' || type == '0') temperature = value;
+          if (type == 'Humidity' || type == '2') humidity = value;
+          if (type == 'SoilMoisture' || type == '3') soilPercent = (value / 100).clamp(0.0, 1.0);
+        }
+
+        // تحديث الأجهزة
+        for (var d in devices) {
+          final type = d['type']?.toString().toLowerCase() ?? '';
+          final state = d['currentState']?.toString().toUpperCase() == 'ON';
+          
+          if (type.contains('pump')) isPumpOn = state;
+          if (type.contains('valve')) isValveOpen = state;
+        }
+        
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg, // استخدام الخلفية الموحدة
+      backgroundColor: AppColors.scaffoldBg,
       body: Stack(
         children: [
           _buildBackgroundGradient(),
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  const SizedBox(height: 30),
-                  _buildHeader(),
-                  const SizedBox(height: 30),
-
-                  // 1. مؤشر الحرارة والرطوبة الجوية (DHT11 Data)
-                  _buildWeatherStatusCard(),
-
-                  const SizedBox(height: 20),
-
-                  // 2. دائرة رطوبة التربة (Soil Moisture Circle)
-                  _buildSoilMoistureSection(),
-
-                  const SizedBox(height: 25),
-
-                  // 3. حالة المضخة وصمام الخزان (Actuators Status)
-                  _buildSystemStatusGrid(),
-
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+              : RefreshIndicator(
+                  onRefresh: _fetchData,
+                  color: AppColors.primaryNeon,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        _buildHeader(),
+                        const SizedBox(height: 30),
+                        _buildWeatherStatusCard(),
+                        const SizedBox(height: 20),
+                        _buildSoilMoistureSection(),
+                        const SizedBox(height: 25),
+                        _buildSystemStatusGrid(),
+                        const SizedBox(height: 40),
+                        Text(
+                          "Last update: ${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}",
+                          style: const TextStyle(color: AppColors.textGrey, fontSize: 10),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
           ),
         ],
       ),
@@ -64,24 +119,28 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: AppColors.mainGradient, // استخدام تدرج مشروعك الرسمي
+          colors: AppColors.mainGradient,
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return const Text(
-      "Farming Control Center",
-      style: TextStyle(
-        color: AppColors.textLight,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          "Farming Control",
+          style: TextStyle(color: AppColors.textLight, fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        IconButton(
+          onPressed: _fetchData,
+          icon: const Icon(Icons.refresh_rounded, color: AppColors.primaryNeon),
+        ),
+      ],
     );
   }
 
-  // يعرض القيم القادمة من حساس DHT11
   Widget _buildWeatherStatusCard() {
     return Container(
       padding: const EdgeInsets.all(25),
@@ -98,33 +157,20 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
             children: [
               Text(
                 "${temperature.toInt()}°C",
-                style: const TextStyle(
-                  color: AppColors.textLight,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: const TextStyle(color: AppColors.textLight, fontSize: 32, fontWeight: FontWeight.w900),
               ),
-              const Text(
-                "Air Temperature",
-                style: TextStyle(color: AppColors.textGrey, fontSize: 12),
-              ),
+              const Text("Air Temp", style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
             ],
           ),
+          Container(height: 40, width: 1, color: Colors.white10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 "${humidity.toInt()}%",
-                style: const TextStyle(
-                  color: AppColors.info,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: const TextStyle(color: AppColors.info, fontSize: 32, fontWeight: FontWeight.w900),
               ),
-              const Text(
-                "Air Humidity",
-                style: TextStyle(color: AppColors.textGrey, fontSize: 12),
-              ),
+              const Text("Air Humidity", style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
             ],
           ),
         ],
@@ -132,7 +178,6 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
     );
   }
 
-  // يعرض النسبة المئوية لـ soilPercent
   Widget _buildSoilMoistureSection() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 30),
@@ -150,31 +195,20 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
             percent: soilPercent,
             center: Text(
               "${(soilPercent * 100).toInt()}%",
-              style: const TextStyle(
-                color: AppColors.textLight,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(color: AppColors.textLight, fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            progressColor: AppColors.primaryNeon,
+            progressColor: soilPercent < 0.3 ? AppColors.danger : AppColors.primaryNeon,
             backgroundColor: Colors.white10,
             circularStrokeCap: CircularStrokeCap.round,
             animation: true,
           ),
           const SizedBox(height: 15),
-          const Text(
-            "Soil Moisture Level",
-            style: TextStyle(
-              color: AppColors.textGrey,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          const Text("Soil Moisture Level", style: TextStyle(color: AppColors.textGrey, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  // يعرض حالة RELAY_PIN و RELAY2_PIN
   Widget _buildSystemStatusGrid() {
     return Row(
       children: [
@@ -186,8 +220,8 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
         ),
         const SizedBox(width: 15),
         _buildStatusTile(
-          "Fill Valve",
-          isValveOpen ? "OPENING" : "CLOSED",
+          "Valve Status",
+          isValveOpen ? "OPEN" : "CLOSED",
           Icons.settings_input_component_rounded,
           isValveOpen ? AppColors.warning : AppColors.textGrey,
         ),
@@ -195,12 +229,7 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
     );
   }
 
-  Widget _buildStatusTile(
-    String title,
-    String status,
-    IconData icon,
-    Color statusColor,
-  ) {
+  Widget _buildStatusTile(String title, String status, IconData icon, Color statusColor) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -213,23 +242,9 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
           children: [
             Icon(icon, color: statusColor, size: 30),
             const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.textGrey,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(title, style: const TextStyle(color: AppColors.textGrey, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(
-              status,
-              style: TextStyle(
-                color: statusColor,
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-              ),
-            ),
+            Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.w900, fontSize: 14)),
           ],
         ),
       ),

@@ -3,8 +3,9 @@ import 'dart:ui';
 // استيراد ملف الألوان المركزي لضمان الربط المعماري للمشروع
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 
+import 'data/services/parking_service.dart';
+
 class ShowReservationsPage extends StatefulWidget {
-  // اسم المسار الموحد لضمان عمل الأزرار في الداشبورد
   static const routeName = '/ShowReservationsPage';
   const ShowReservationsPage({super.key});
 
@@ -13,33 +14,26 @@ class ShowReservationsPage extends StatefulWidget {
 }
 
 class _ShowReservationsPageState extends State<ShowReservationsPage> {
-  // بيانات تجريبية محدثة لمحاكاة محتوى صورك
-  final List<Map<String, String>> mockReservations = const [
-    {
-      'space': 'A4',
-      'vehicle': 'XYZ 7890',
-      'time': '10:00 AM • Today',
-      'status': 'reserved',
-    },
-    {
-      'space': 'A6',
-      'vehicle': 'BMW 1234',
-      'time': '12:00 PM • Today',
-      'status': 'reserved',
-    },
-    {
-      'space': 'B2',
-      'vehicle': 'ABC 1234',
-      'time': '08:00 AM • Yesterday',
-      'status': 'finished',
-    },
-    {
-      'space': 'C1',
-      'vehicle': 'LMN 5678',
-      'time': '03:00 PM • Tomorrow',
-      'status': 'reserved',
-    },
-  ];
+  final ParkingService _parkingService = ParkingService();
+  List<dynamic> _bookings = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookings();
+  }
+
+  Future<void> _fetchBookings() async {
+    final data = await _parkingService.getMyBookings();
+    if (mounted) {
+      setState(() {
+        _bookings = data;
+        _isLoading = false;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,25 +50,29 @@ class _ShowReservationsPageState extends State<ShowReservationsPage> {
               children: [
                 _buildModernHeader(context, primaryNeon),
                 Expanded(
-                  child: ListView.builder(
-                    // مسافة سفلية كافية لمنع التداخل مع شريط التنقل
-                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: mockReservations.length,
-                    itemBuilder: (context, index) {
-                      final res = mockReservations[index];
-                      final bool isFinished = res['status'] == 'finished';
-                      return _buildReservationCard(
-                        context,
-                        res['space']!,
-                        res['vehicle']!,
-                        res['time']!,
-                        isFinished,
-                        primaryNeon,
-                      );
-                    },
-                  ),
+                  child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                    : _bookings.isEmpty
+                      ? const Center(child: Text("No bookings found", style: TextStyle(color: Colors.white)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _bookings.length,
+                          itemBuilder: (context, index) {
+                            final res = _bookings[index];
+                            final bool isFinished = res['status'] == 'Finished' || res['status'] == 'Expired';
+                            return _buildReservationCard(
+                              context,
+                              res['spotName'] ?? res['deviceId'] ?? 'N/A',
+                              res['plateNumber'] ?? 'N/A',
+                              res['startTime'] != null ? res['startTime'].toString().substring(0, 16) : 'N/A',
+                              isFinished,
+                              primaryNeon,
+                            );
+                          },
+                        ),
                 ),
+
               ],
             ),
           ),

@@ -1,37 +1,122 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 
+
+import 'data/services/chat_service.dart';
+
 class ChatPage extends StatefulWidget {
   final String chatName;
+  final String userId;
 
-  const ChatPage({super.key, required this.chatName});
+  const ChatPage({super.key, required this.chatName, required this.userId});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final List<Map<String, dynamic>> messages = [
-    {"text": "Hello!", "isMe": false, "time": "10:30 AM"},
-    {"text": "Hi, how are you?", "isMe": true, "time": "10:31 AM"},
-    {"text": "I’m good, thanks!", "isMe": false, "time": "10:32 AM"},
-  ];
+  final ChatService _chatService = ChatService();
+  bool _isLoading = true;
+  List<dynamic> messages = [];
+  Timer? _pollingTimer;
+  String? currentUserId;
 
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _initChat();
+  }
+
+  Future<void> _initChat() async {
+    currentUserId = await _chatService.getCurrentUserId();
+    print("My User ID: $currentUserId");
+    await _fetchHistory();
+    // بدء التحديث اللحظي كل 3 ثواني
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) => _fetchHistory());
+  }
+
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel(); // إيقاف التحديث عند الخروج من الصفحة
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchHistory() async {
+    print("Fetching chat history for user: ${widget.userId}...");
+    final data = await _chatService.getChatHistory(widget.userId);
+    if (mounted) {
+      if (data.length != messages.length) {
+        print("New messages received! Count: ${data.length}");
+        setState(() {
+          messages = data;
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+      // تمييز الرسائل كمقروءة
+      _chatService.markChatAsRead(widget.userId);
+    }
+  }
+
+
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+
+  void _sendMessage() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    // إضافة الرسالة محلياً فوراً لتجربة مستخدم سريعة
     setState(() {
-      messages.add({"text": _controller.text.trim(), "isMe": true, "time": "Now"});
+      messages.add({
+        "message": text,
+        "isMe": true,
+        "isRead": false, // حالة القراءة المبدئية (صح واحدة)
+        "timestamp": DateTime.now().toString(),
+      });
       _controller.clear();
     });
-    // التمرير التلقائي لآخر رسالة
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-    });
+
+    
+    _scrollToBottom();
+
+    // إرسال الرسالة للسيرفر
+    print("Sending message to ${widget.userId}: $text");
+    final success = await _chatService.sendMessage(widget.userId, text);
+    
+    if (success) {
+      print("Message sent successfully!");
+      _fetchHistory();
+    } else {
+      print("Failed to send message!");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to send message")),
+        );
+      }
+    }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,18 +131,23 @@ class _ChatPageState extends State<ChatPage> {
         ),
         title: Row(
           children: [
-            const CircleAvatar(
-              backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=5"),
+            CircleAvatar(
+              backgroundColor: AppColors.primaryNeon.withOpacity(0.1),
               radius: 18,
+              child: Text(
+                widget.chatName.isNotEmpty ? widget.chatName[0].toUpperCase() : "?",
+                style: const TextStyle(color: AppColors.primaryNeon, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
+
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.chatName, style: const TextStyle(fontSize: 16, color: AppColors.textLight, fontWeight: FontWeight.bold)),
-                const Text("online", style: TextStyle(fontSize: 11, color: AppColors.primaryNeon)), // حالة الأونلاين بالنيون
               ],
             ),
+
           ],
         ),
       ),
@@ -72,13 +162,16 @@ class _ChatPageState extends State<ChatPage> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(15),
-                itemCount: messages.length,
-                itemBuilder: (context, index) => _buildMessageBubble(messages[index]),
-              ),
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(15),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) => _buildMessageBubble(messages[index]),
+                  ),
             ),
+
             _buildInputArea(),
           ],
         ),
@@ -86,15 +179,23 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> msg) {
-    bool isMe = msg["isMe"];
+  Widget _buildMessageBubble(dynamic msg) {
+    // تحديد صاحب الرسالة بمقارنة الـ ID الخاص بك مع الـ senderId الخاص بالرسالة
+    bool isMe = (msg["senderId"] != null && currentUserId != null) 
+        ? msg["senderId"].toString() == currentUserId 
+        : (msg["isMe"] ?? msg["isSender"] ?? false);
+    
+    String text = msg["message"] ?? msg["text"] ?? "";
+    bool isRead = msg["isRead"] ?? false;
+
+
+    
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          // نيون للرسائل الخاصة وشفافية للرسائل المستلمة
           color: isMe ? AppColors.primaryNeon.withValues(alpha: 0.2) : AppColors.cardBg.withValues(alpha: 0.4),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(20),
@@ -104,10 +205,27 @@ class _ChatPageState extends State<ChatPage> {
           ),
           border: Border.all(color: isMe ? AppColors.primaryNeon.withValues(alpha: 0.3) : AppColors.cardBorder),
         ),
-        child: Text(msg["text"], style: const TextStyle(color: AppColors.textLight, fontSize: 15)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(text, style: const TextStyle(color: AppColors.textLight, fontSize: 15)),
+            if (isMe) ...[
+              const SizedBox(height: 4),
+              Icon(
+                isRead ? Icons.done_all_rounded : Icons.check_rounded, 
+                size: 14, 
+                color: isRead ? AppColors.primaryNeon : AppColors.textGrey
+              ),
+            ]
+          ],
+        ),
       ),
     );
   }
+
+
+
+
 
   Widget _buildInputArea() {
     return SafeArea(
@@ -143,4 +261,4 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
-}
+}

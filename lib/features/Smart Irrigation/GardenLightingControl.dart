@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
 
 class GardenLightingControl extends StatefulWidget {
   const GardenLightingControl({super.key});
@@ -10,21 +11,70 @@ class GardenLightingControl extends StatefulWidget {
 }
 
 class _GardenLightingControlState extends State<GardenLightingControl> {
-  // متغير يعكس حالة LDR_RELAY القادمة من الـ ESP32
+  final DeviceService _deviceService = DeviceService();
   bool isGardenLightOn = false;
+  int? _deviceId;
+  bool _isLoading = true;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLightStatus();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchLightStatus());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchLightStatus() async {
+    final devices = await _deviceService.getDevicesByZone(1);
+    if (mounted) {
+      setState(() {
+        for (var d in devices) {
+          final type = d['type']?.toString().toLowerCase() ?? '';
+          if (type.contains('light') || type.contains('garden')) {
+            _deviceId = d['id'];
+            isGardenLightOn = d['currentState']?.toString().toUpperCase() == 'ON';
+            break;
+          }
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleLight(bool value) async {
+    if (_deviceId == null) return;
+    
+    // Optimistic UI update
+    setState(() => isGardenLightOn = value);
+    
+    final success = await _deviceService.controlDevice(_deviceId!, value ? 'ON' : 'OFF');
+    if (!success && mounted) {
+      setState(() => isGardenLightOn = !value);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to control garden light'), backgroundColor: AppColors.danger),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator(color: AppColors.primaryNeon)));
+
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: AppColors.cardBg.withValues(alpha: 0.4), // تأثير زجاجي نيون
+        color: AppColors.cardBg.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
         children: [
-          // أيقونة "اللمبة" التفاعلية
           _buildAnimatedBulb(),
           const SizedBox(width: 25),
           Expanded(
@@ -42,16 +92,15 @@ class _GardenLightingControlState extends State<GardenLightingControl> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  isGardenLightOn ? "Controlled by LDR Sensor" : "System in standby",
+                  isGardenLightOn ? "Controlled via Server" : "System in standby",
                   style: const TextStyle(color: AppColors.textGrey, fontSize: 10),
                 ),
               ],
             ),
           ),
-          // زر للتحكم اليدوي السريع
           Switch(
             value: isGardenLightOn,
-            onChanged: (v) => setState(() => isGardenLightOn = v),
+            onChanged: _toggleLight,
             activeColor: AppColors.primaryNeon,
           ),
         ],
@@ -59,7 +108,6 @@ class _GardenLightingControlState extends State<GardenLightingControl> {
     );
   }
 
-  // ويدجت اللمبة التي تتوهج باللون النيون
   Widget _buildAnimatedBulb() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
 import 'irrigation_models.dart';
 import 'irrigation_service.dart';
 
@@ -24,17 +26,22 @@ class ZoneControlPage extends StatefulWidget {
 }
 
 class _ZoneControlPageState extends State<ZoneControlPage> {
+  final DeviceService _deviceService = DeviceService();
+  final SensorService _sensorService = SensorService();
+  
   late IrrigationZone _zone;
   bool _isIrrigating = false;
   DateTime? _irrigationStartTime;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _zone = widget.zone;
+    _isIrrigating = _zone.valveOpen;
   }
 
-  void _startIrrigation() {
+  Future<void> _startIrrigation() async {
     final checkResult = IrrigationService.preIrrigationCheck(
       temperature: widget.temperature,
       currentMoisture: _zone.soilMoisture,
@@ -48,20 +55,54 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
       return;
     }
 
-    setState(() {
-      _isIrrigating = true;
-      _irrigationStartTime = DateTime.now();
-      _zone = IrrigationZone(
-        id: _zone.id,
-        name: _zone.name,
-        soilMoisture: _zone.soilMoisture,
-        valveOpen: true,
-        lastIrrigation: _zone.lastIrrigation,
-      );
-    });
+    await _executeIrrigation(true);
   }
 
-  void _stopIrrigation() {
+  Future<void> _executeIrrigation(bool start) async {
+    setState(() => _isLoading = true);
+    
+    // محاولة إيجاد الجهاز المناسب (Valve) في السيرفر
+    final devices = await _deviceService.getDevicesByZone(1);
+    int? valveId;
+    for (var d in devices) {
+      if (d['type']?.toString().toLowerCase().contains('valve') ?? false) {
+        valveId = d['id'];
+        break;
+      }
+    }
+
+    if (valveId != null) {
+      final success = await _deviceService.controlDevice(valveId, start ? 'ON' : 'OFF');
+      if (!success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server communication failed'), backgroundColor: AppColors.danger),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+    }
+
+    if (start) {
+      setState(() {
+        _isIrrigating = true;
+        _irrigationStartTime = DateTime.now();
+        _zone = IrrigationZone(
+          id: _zone.id,
+          name: _zone.name,
+          soilMoisture: _zone.soilMoisture,
+          valveOpen: true,
+          lastIrrigation: _zone.lastIrrigation,
+        );
+        _isLoading = false;
+      });
+    } else {
+      _finalizeIrrigation();
+    }
+  }
+
+  void _finalizeIrrigation() {
     if (_irrigationStartTime != null) {
       final duration = DateTime.now().difference(_irrigationStartTime!);
       final moistureAfter = (_zone.soilMoisture + 15.0).clamp(0.0, 100.0);
@@ -88,6 +129,7 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
           valveOpen: false,
           lastIrrigation: DateTime.now(),
         );
+        _isLoading = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -115,10 +157,7 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'System detected issues:',
-              style: TextStyle(color: AppColors.textGrey, fontWeight: FontWeight.bold),
-            ),
+            const Text('System warnings:', style: TextStyle(color: AppColors.textGrey, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             ...((checkResult['warnings'] as List<String>).map((w) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -126,38 +165,20 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
                 children: [
                   const Icon(Icons.error_outline, color: AppColors.warning, size: 16),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(w, style: const TextStyle(color: AppColors.textLight, fontSize: 13)),
-                  ),
+                  Expanded(child: Text(w, style: const TextStyle(color: AppColors.textLight, fontSize: 13))),
                 ],
               ),
             ))),
             const SizedBox(height: 15),
-            const Text(
-              'Do you want to proceed anyway?',
-              style: TextStyle(color: AppColors.textGrey, fontSize: 12),
-            ),
+            const Text('Do you want to override and proceed?', style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textGrey)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              setState(() {
-                _isIrrigating = true;
-                _irrigationStartTime = DateTime.now();
-                _zone = IrrigationZone(
-                  id: _zone.id,
-                  name: _zone.name,
-                  soilMoisture: _zone.soilMoisture,
-                  valveOpen: true,
-                  lastIrrigation: _zone.lastIrrigation,
-                );
-              });
+              _executeIrrigation(true);
             },
             child: const Text('Proceed', style: TextStyle(color: AppColors.primaryNeon)),
           ),
@@ -171,23 +192,13 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.pop(context, _zone);
-        }
+        if (!didPop) Navigator.pop(context, _zone);
       },
       child: Scaffold(
         backgroundColor: AppColors.scaffoldBg,
         body: Stack(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: AppColors.mainGradient,
-                ),
-              ),
-            ),
+            _buildBackgroundGradient(),
             SafeArea(
               child: Column(
                 children: [
@@ -211,7 +222,20 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
                 ],
               ),
             ),
+            if (_isLoading) Container(color: Colors.black26, child: const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackgroundGradient() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: AppColors.mainGradient,
         ),
       ),
     );
@@ -227,20 +251,9 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
             onPressed: () => Navigator.pop(context, _zone),
           ),
           const Spacer(),
-          Text(
-            _zone.name,
-            style: const TextStyle(
-              color: AppColors.textLight,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(_zone.name, style: const TextStyle(color: AppColors.textLight, fontSize: 22, fontWeight: FontWeight.bold)),
           const Spacer(),
-          Icon(
-            Icons.grass,
-            color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey,
-            size: 28,
-          ),
+          Icon(Icons.grass, color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey, size: 28),
         ],
       ),
     );
@@ -256,19 +269,9 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
       ),
       child: Column(
         children: [
-          const Text(
-            'Soil Moisture',
-            style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-          ),
+          const Text('Soil Moisture', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
           const SizedBox(height: 15),
-          Text(
-            '${_zone.soilMoisture.toInt()}%',
-            style: const TextStyle(
-              color: AppColors.primaryNeon,
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('${_zone.soilMoisture.toInt()}%', style: const TextStyle(color: AppColors.primaryNeon, fontSize: 64, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           LinearProgressIndicator(
             value: _zone.soilMoisture / 100,
@@ -288,45 +291,26 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
       decoration: BoxDecoration(
         color: AppColors.cardBg.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: _zone.valveOpen
-              ? AppColors.primaryNeon.withValues(alpha: 0.5)
-              : AppColors.cardBorder,
-        ),
+        border: Border.all(color: _zone.valveOpen ? AppColors.primaryNeon.withValues(alpha: 0.5) : AppColors.cardBorder),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: (_zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey)
-                  .withValues(alpha: 0.1),
+              color: (_zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              _zone.valveOpen ? Icons.water_drop : Icons.water_drop_outlined,
-              color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey,
-              size: 28,
-            ),
+            child: Icon(_zone.valveOpen ? Icons.water_drop : Icons.water_drop_outlined, color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textGrey, size: 28),
           ),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Valve Status',
-                  style: TextStyle(color: AppColors.textGrey, fontSize: 12),
-                ),
+                const Text('Valve Status', style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
                 const SizedBox(height: 5),
-                Text(
-                  _zone.valveOpen ? 'OPEN - Irrigating' : 'CLOSED - Standby',
-                  style: TextStyle(
-                    color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textLight,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(_zone.valveOpen ? 'OPEN - Irrigating' : 'CLOSED - Standby', style: TextStyle(color: _zone.valveOpen ? AppColors.primaryNeon : AppColors.textLight, fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -337,9 +321,7 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
 
   Widget _buildLastIrrigationCard() {
     final lastIrrigation = _zone.lastIrrigation;
-    final timeAgo = lastIrrigation != null
-        ? DateTime.now().difference(lastIrrigation)
-        : null;
+    final timeAgo = lastIrrigation != null ? DateTime.now().difference(lastIrrigation) : null;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -356,21 +338,9 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Last Irrigation',
-                  style: TextStyle(color: AppColors.textGrey, fontSize: 12),
-                ),
+                const Text('Last Irrigation', style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
                 const SizedBox(height: 5),
-                Text(
-                  timeAgo != null
-                      ? '${timeAgo.inHours}h ${timeAgo.inMinutes % 60}m ago'
-                      : 'Never',
-                  style: const TextStyle(
-                    color: AppColors.textLight,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(timeAgo != null ? '${timeAgo.inHours}h ${timeAgo.inMinutes % 60}m ago' : 'Never', style: const TextStyle(color: AppColors.textLight, fontSize: 14, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -384,18 +354,13 @@ class _ZoneControlPageState extends State<ZoneControlPage> {
       width: double.infinity,
       height: 60,
       child: ElevatedButton.icon(
-        onPressed: _isIrrigating ? _stopIrrigation : _startIrrigation,
+        onPressed: _isIrrigating ? () => _executeIrrigation(false) : _startIrrigation,
         icon: Icon(_isIrrigating ? Icons.stop : Icons.play_arrow),
-        label: Text(
-          _isIrrigating ? 'STOP IRRIGATION' : 'START IRRIGATION',
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-        ),
+        label: Text(_isIrrigating ? 'STOP IRRIGATION' : 'START IRRIGATION', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
         style: ElevatedButton.styleFrom(
           backgroundColor: _isIrrigating ? AppColors.danger : AppColors.primaryNeon,
           foregroundColor: AppColors.textDark,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
       ),
     );
@@ -457,14 +422,7 @@ class IrrigationLogsPage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           const Spacer(),
-          const Text(
-            'Irrigation Logs',
-            style: TextStyle(
-              color: AppColors.textLight,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const Text('Irrigation Logs', style: TextStyle(color: AppColors.textLight, fontSize: 22, fontWeight: FontWeight.bold)),
           const Spacer(),
           const Icon(Icons.history, color: AppColors.primaryNeon, size: 28),
         ],
@@ -477,27 +435,11 @@ class IrrigationLogsPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.water_drop_outlined,
-            size: 80,
-            color: AppColors.textGrey.withValues(alpha: 0.3),
-          ),
+          Icon(Icons.water_drop_outlined, size: 80, color: AppColors.textGrey.withValues(alpha: 0.3)),
           const SizedBox(height: 20),
-          const Text(
-            'No irrigation logs yet',
-            style: TextStyle(
-              color: AppColors.textGrey,
-              fontSize: 18,
-            ),
-          ),
+          const Text('No irrigation logs yet', style: TextStyle(color: AppColors.textGrey, fontSize: 18)),
           const SizedBox(height: 10),
-          const Text(
-            'Start irrigating to see logs here',
-            style: TextStyle(
-              color: AppColors.textGrey,
-              fontSize: 14,
-            ),
-          ),
+          const Text('Start irrigating to see logs here', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
         ],
       ),
     );
@@ -512,11 +454,7 @@ class IrrigationLogsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBg.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: log.isManual
-              ? AppColors.warning.withValues(alpha: 0.3)
-              : AppColors.primaryNeon.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: log.isManual ? AppColors.warning.withValues(alpha: 0.3) : AppColors.primaryNeon.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,54 +464,28 @@ class IrrigationLogsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (log.isManual ? AppColors.warning : AppColors.primaryNeon)
-                      .withValues(alpha: 0.1),
+                  color: (log.isManual ? AppColors.warning : AppColors.primaryNeon).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  log.isManual ? Icons.touch_app : Icons.auto_awesome,
-                  color: log.isManual ? AppColors.warning : AppColors.primaryNeon,
-                  size: 20,
-                ),
+                child: Icon(log.isManual ? Icons.touch_app : Icons.auto_awesome, color: log.isManual ? AppColors.warning : AppColors.primaryNeon, size: 20),
               ),
               const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      log.zoneId == 'zone1' ? 'Zone 1' : 'Zone 2',
-                      style: const TextStyle(
-                        color: AppColors.textLight,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      dateFormat.format(log.timestamp),
-                      style: const TextStyle(
-                        color: AppColors.textGrey,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text(log.zoneId, style: const TextStyle(color: AppColors.textLight, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(dateFormat.format(log.timestamp), style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (log.isManual ? AppColors.warning : AppColors.primaryNeon)
-                      .withValues(alpha: 0.2),
+                  color: (log.isManual ? AppColors.warning : AppColors.primaryNeon).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text(
-                  log.isManual ? 'MANUAL' : 'AUTO',
-                  style: TextStyle(
-                    color: log.isManual ? AppColors.warning : AppColors.primaryNeon,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(log.isManual ? 'MANUAL' : 'AUTO', style: TextStyle(color: log.isManual ? AppColors.warning : AppColors.primaryNeon, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -582,39 +494,15 @@ class IrrigationLogsPage extends StatelessWidget {
           const SizedBox(height: 15),
           Row(
             children: [
-              Expanded(
-                child: _buildLogDetail(
-                  'Duration',
-                  '${log.duration.inMinutes}m ${log.duration.inSeconds % 60}s',
-                  Icons.timer,
-                ),
-              ),
-              Expanded(
-                child: _buildLogDetail(
-                  'Temperature',
-                  '${log.tempBefore.toInt()}°C',
-                  Icons.thermostat,
-                ),
-              ),
+              Expanded(child: _buildLogDetail('Duration', '${log.duration.inMinutes}m ${log.duration.inSeconds % 60}s', Icons.timer)),
+              Expanded(child: _buildLogDetail('Temperature', '${log.tempBefore.toInt()}°C', Icons.thermostat)),
             ],
           ),
           const SizedBox(height: 15),
           Row(
             children: [
-              Expanded(
-                child: _buildLogDetail(
-                  'Before',
-                  '${log.moistureBefore.toInt()}%',
-                  Icons.water_drop_outlined,
-                ),
-              ),
-              Expanded(
-                child: _buildLogDetail(
-                  'After',
-                  '${log.moistureAfter.toInt()}%',
-                  Icons.water_drop,
-                ),
-              ),
+              Expanded(child: _buildLogDetail('Before', '${log.moistureBefore.toInt()}%', Icons.water_drop_outlined)),
+              Expanded(child: _buildLogDetail('After', '${log.moistureAfter.toInt()}%', Icons.water_drop)),
             ],
           ),
         ],
@@ -630,21 +518,8 @@ class IrrigationLogsPage extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textGrey,
-                fontSize: 10,
-              ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.textLight,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text(label, style: const TextStyle(color: AppColors.textGrey, fontSize: 10)),
+            Text(value, style: const TextStyle(color: AppColors.textLight, fontSize: 13, fontWeight: FontWeight.bold)),
           ],
         ),
       ],

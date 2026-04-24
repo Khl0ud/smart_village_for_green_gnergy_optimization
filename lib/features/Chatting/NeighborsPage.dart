@@ -1,10 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-// استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-// استيراد صفحة الشات التفصيلية
+
+
 import 'ChatScreen.dart';
+import 'data/services/chat_service.dart';
+import 'UsersListScreen.dart';
 
 class NeighborsPage extends StatefulWidget {
+
   const NeighborsPage({super.key});
 
   @override
@@ -12,33 +16,58 @@ class NeighborsPage extends StatefulWidget {
 }
 
 class _NeighborsPageState extends State<NeighborsPage> {
-  // قائمة الجيران النشطة
-  List<Map<String, dynamic>> neighbors = [
-    {
-      "name": "Rawan",
-      "avatar": "https://i.pravatar.cc/150?u=rawan",
-      "lastMessage": "Hey, how are you?",
-      "time": "10:30 AM",
-      "unread": 2,
-      "online": true,
-      "pinned": false,
-    },
-    {
-      "name": "Ahmed",
-      "avatar": "https://i.pravatar.cc/150?u=ahmed",
-      "lastMessage": "The smart pump is working fine!",
-      "time": "10:30 AM",
-      "unread": 1,
-      "online": true,
-      "pinned": false,
-    },
-  ];
-
-  List<Map<String, dynamic>> archivedNeighbors = [];
+  final ChatService _chatService = ChatService();
+  bool _isLoading = true;
+  List<dynamic> neighbors = [];
+  List<dynamic> archivedNeighbors = [];
   String searchQuery = "";
+  Timer? _pollingTimer;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+    // بدء التحديث اللحظي للقائمة كل 5 ثواني
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) => _fetchConversations());
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel(); // إيقاف التحديث عند مغادرة الصفحة
+    super.dispose();
+  }
+
+
+  Future<void> _loadInitialData() async {
+    // عرض الكاش أولاً للسرعة
+    final cached = await _chatService.getCachedConversations();
+    if (cached.isNotEmpty && mounted) {
+      setState(() {
+        neighbors = cached;
+        _isLoading = false;
+      });
+    }
+    // ثم التحديث من السيرفر
+    _fetchConversations();
+  }
+
+  Future<void> _fetchConversations() async {
+    print("Updating conversations list from server...");
+    final data = await _chatService.getConversations();
+    if (mounted) {
+      setState(() {
+        neighbors = data;
+        _isLoading = false;
+      });
+    }
+  }
+
+
 
   // دالة التعامل مع الأكشنز (حذف، أرشفة، تثبيت)
-  void _handleAction(String action, Map<String, dynamic> chat) {
+  void _handleAction(String action, dynamic chat) {
+
     setState(() {
       if (action == "delete") {
         neighbors.remove(chat);
@@ -55,15 +84,16 @@ class _NeighborsPageState extends State<NeighborsPage> {
   Widget build(BuildContext context) {
     // تصفية القائمة بناءً على البحث
     final filteredNeighbors = neighbors
-        .where((neighbor) => neighbor["name"].toLowerCase().contains(searchQuery.toLowerCase()))
+        .where((neighbor) => (neighbor["otherUserName"] ?? "").toString().toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     // فرز المحادثات: المثبت أولاً ثم حسب الرسائل غير المقروءة
     filteredNeighbors.sort((a, b) {
       if ((a["pinned"] ?? false) && !(b["pinned"] ?? false)) return -1;
       if (!(a["pinned"] ?? false) && (b["pinned"] ?? false)) return 1;
-      return (b["unread"] ?? 0).compareTo(a["unread"] ?? 0);
+      return (b["unreadCount"] ?? 0).compareTo(a["unreadCount"] ?? 0);
     });
+
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
@@ -84,24 +114,46 @@ class _NeighborsPageState extends State<NeighborsPage> {
                 _buildSearchBar(),
                 // استخدام ListView واحد لمنع الـ Overflow
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    children: [
-                      if (archivedNeighbors.isNotEmpty) _buildArchivedSection(),
-                      ...filteredNeighbors.map((neighbor) => _buildChatTile(neighbor)).toList(),
-                    ],
-                  ),
+                  child: _isLoading && neighbors.isEmpty
+                    ? const Center(child: CircularProgressIndicator(color: AppColors.primaryNeon))
+                    : RefreshIndicator(
+                        onRefresh: _fetchConversations,
+                        color: AppColors.primaryNeon,
+                        backgroundColor: AppColors.cardBg,
+                        child: ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          children: [
+                            if (archivedNeighbors.isNotEmpty) _buildArchivedSection(),
+                            if (filteredNeighbors.isEmpty)
+                              const Center(child: Padding(
+                                padding: EdgeInsets.only(top: 100),
+                                child: Text("No conversations found", style: TextStyle(color: AppColors.textGrey)),
+                              ))
+                            else
+                              ...filteredNeighbors.map((neighbor) => _buildChatTile(neighbor)).toList(),
+                            const SizedBox(height: 100), // مساحة للـ FAB
+                          ],
+                        ),
+                      ),
                 ),
+
+
               ],
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const UsersListScreen()),
+          );
+        },
         backgroundColor: AppColors.primaryNeon,
-        child: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.textDark),
+        child: const Icon(Icons.people_outline_rounded, color: AppColors.textDark),
       ),
+
     );
   }
 
@@ -144,39 +196,59 @@ class _NeighborsPageState extends State<NeighborsPage> {
     );
   }
 
-  Widget _buildChatTile(Map<String, dynamic> neighbor, {bool isArchived = false}) {
+  Widget _buildChatTile(dynamic neighbor, {bool isArchived = false}) {
+    final name = neighbor["otherUserFullName"] ?? neighbor["otherUserName"] ?? neighbor["fullName"] ?? "User";
+
+    final lastMsg = neighbor["lastMessage"] ?? "No messages yet";
+    
     return GestureDetector(
       onLongPress: () => _showOptions(neighbor),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         decoration: BoxDecoration(
-          color: AppColors.cardBg.withValues(alpha: neighbor["pinned"] == true ? 0.4 : 0.2),
+          color: AppColors.cardBg.withOpacity(neighbor["pinned"] == true ? 0.4 : 0.2),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: neighbor["pinned"] == true ? AppColors.primaryNeon.withValues(alpha: 0.3) : AppColors.cardBorder),
+          border: Border.all(color: neighbor["pinned"] == true ? AppColors.primaryNeon.withOpacity(0.3) : AppColors.cardBorder),
         ),
         child: ListTile(
           leading: _buildAvatar(neighbor),
-          title: Text(neighbor["name"], style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold)),
-          subtitle: Text(neighbor["lastMessage"], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textGrey)),
+          title: Text(name, style: const TextStyle(color: AppColors.textLight, fontWeight: FontWeight.bold)),
           trailing: _buildTrailing(neighbor, isArchived),
-          onTap: () {
-            // تفعيل الانتقال لصفحة الشات الملونة
-            Navigator.push(
+          onTap: () async {
+
+            await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ChatPage(chatName: neighbor["name"]),
+                builder: (context) => ChatPage(
+                  chatName: name,
+                  userId: (neighbor["otherUserId"] ?? neighbor["userId"] ?? "").toString(),
+                ),
+
               ),
             );
+            // تحديث القائمة عند العودة من الشات لرؤية آخر رسالة
+            _fetchConversations();
           },
+
         ),
       ),
     );
   }
 
-  Widget _buildAvatar(Map<String, dynamic> neighbor) {
+
+  Widget _buildAvatar(dynamic neighbor) {
+    final name = neighbor["otherUserFullName"] ?? neighbor["otherUserName"] ?? neighbor["fullName"] ?? "User";
+
     return Stack(
       children: [
-        CircleAvatar(backgroundImage: NetworkImage(neighbor["avatar"]), radius: 28),
+        CircleAvatar(
+          backgroundColor: AppColors.primaryNeon.withOpacity(0.1),
+          radius: 28,
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : "?",
+            style: const TextStyle(color: AppColors.primaryNeon, fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+        ),
         if (neighbor["online"] == true)
           Positioned(
             bottom: 2, right: 2,
@@ -189,23 +261,30 @@ class _NeighborsPageState extends State<NeighborsPage> {
     );
   }
 
-  Widget _buildTrailing(Map<String, dynamic> neighbor, bool isArchived) {
+
+
+  Widget _buildTrailing(dynamic neighbor, bool isArchived) {
+    final timeStr = neighbor["lastMessageTime"] != null 
+        ? neighbor["lastMessageTime"].toString().substring(11, 16) 
+        : "";
+    final unreadCount = neighbor["unreadCount"] ?? 0;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(neighbor["time"], style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+        Text(timeStr, style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
         const SizedBox(height: 5),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (neighbor["pinned"] == true) const Icon(Icons.push_pin, size: 14, color: AppColors.primaryNeon),
-            if ((neighbor["unread"] ?? 0) > 0)
+            if (unreadCount > 0)
               Container(
                 margin: const EdgeInsets.only(left: 5),
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(color: AppColors.primaryNeon, shape: BoxShape.circle),
-                child: Text("${neighbor["unread"]}", style: const TextStyle(color: AppColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text("$unreadCount", style: const TextStyle(color: AppColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             if (isArchived)
               IconButton(
@@ -219,6 +298,7 @@ class _NeighborsPageState extends State<NeighborsPage> {
       ],
     );
   }
+
 
   void _showOptions(Map<String, dynamic> neighbor) {
     showModalBottomSheet(

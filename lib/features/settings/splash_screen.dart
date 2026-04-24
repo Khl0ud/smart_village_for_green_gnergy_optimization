@@ -3,6 +3,8 @@ import 'dart:async';
 // استيراد ملف الألوان المركزي من مجلد core
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 import 'LoginScreen.dart'; 
+import 'MainShell.dart';
+import 'data/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,17 +20,29 @@ class _SplashScreenState extends State<SplashScreen> {
     _startTransition();
   }
 
-  // دالة احترافية للتعامل مع الانتقال لضمان سلامة الـ Context
-  void _startTransition() {
-    Future.delayed(const Duration(seconds: 3), () {
-      // التحقق من أن الصفحة لا تزال موجودة في شجرة الـ Widgets 
-      if (mounted) {
+  // دالة ذكية تفحص حالة التوكن قبل الانتقال
+  Future<void> _startTransition() async {
+    final authService = AuthService();
+    final token = await authService.getToken();
+
+    // ننتظر 3 ثواني لعرض الـ Splash
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (mounted) {
+      if (token != null && token.isNotEmpty) {
+        // لو في توكن، ادخل على الرئيسي علطول
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MainShell()),
+        );
+      } else {
+        // لو مفيش، روح لصفحة اللوجن
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
-    });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {

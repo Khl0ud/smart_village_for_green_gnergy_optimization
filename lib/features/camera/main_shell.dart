@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // استيراد ملف الألوان المركزي من مجلد core لضمان الربط
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
-import 'HomeDashboardPage.dart';
+import 'home_dashboard_page.dart';
+
 
 /// ====================== MainShell الرئيسي الموحد ======================
 /// هذا الملف يعمل كـ Wrapper أساسي لواجهة التطبيق

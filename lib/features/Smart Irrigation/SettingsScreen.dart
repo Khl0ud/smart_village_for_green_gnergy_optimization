@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 // استيراد ملف الألوان المركزي لضمان توحيد الهوية البصرية لمشروعكِ
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/automation_service.dart';
 import 'irrigation_models.dart';
+
 
 class SettingsScreen extends StatefulWidget {
   final IrrigationZone zone1;
@@ -29,15 +31,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // مفاتيح التشغيل
   bool isAutoModeOn = true;
   bool isManualIrrigationOn = false;
+  bool _isSaving = false;
+  bool _isLoading = true;
+
+  final AutomationService _automationService = AutomationService();
 
   @override
   void initState() {
     super.initState();
-    _zone1MoistureThreshold = widget.zone1.soilMoisture;
-    _zone2MoistureThreshold = widget.zone2.soilMoisture;
+    _loadCurrentSettings();
+  }
+
+  Future<void> _loadCurrentSettings() async {
+    setState(() => _isLoading = true);
+
+    // جلب إعدادات Zone 1
+    final settingsZone1 = await _automationService.getAutomationSettings(widget.zone1.id);
+    if (settingsZone1 != null) {
+      _zone1MoistureThreshold = (settingsZone1['targetSoilMoisture'] ?? widget.zone1.soilMoisture).toDouble();
+      isAutoModeOn = settingsZone1['isAutoIrrigationEnabled'] ?? true;
+    } else {
+      _zone1MoistureThreshold = widget.zone1.soilMoisture;
+    }
+
+    // جلب إعدادات Zone 2
+    final settingsZone2 = await _automationService.getAutomationSettings(widget.zone2.id);
+    if (settingsZone2 != null) {
+      _zone2MoistureThreshold = (settingsZone2['targetSoilMoisture'] ?? widget.zone2.soilMoisture).toDouble();
+      // We assume auto mode is a global system setting usually, but we take it from zone2 if needed.
+    } else {
+      _zone2MoistureThreshold = widget.zone2.soilMoisture;
+    }
+
+    isManualIrrigationOn = !isAutoModeOn;
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _applyPlantSettings(int zoneNumber, PlantType plant) {
+
     setState(() {
       if (zoneNumber == 1) {
         _zone1Plant = plant;
@@ -94,10 +128,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          if (_isLoading)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryNeon),
+              ),
+            ),
         ],
       ),
     );
   }
+
 
   Widget _buildBackgroundGradient() {
     return Container(
@@ -462,32 +504,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       height: 60,
       child: ElevatedButton.icon(
-        onPressed: () {
-          // هنا سيتم إرسال القيم للـ ESP32 عبر الـ API
-          Navigator.pop(context, {
-            'zone1': {
-              'plant': _zone1Plant,
-              'threshold': _zone1MoistureThreshold,
-            },
-            'zone2': {
-              'plant': _zone2Plant,
-              'threshold': _zone2MoistureThreshold,
-            },
-            'autoMode': isAutoModeOn,
-            'manualMode': isManualIrrigationOn,
-          });
+        onPressed: _isSaving ? null : () async {
+          setState(() => _isSaving = true);
           
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Settings updated successfully! 🚀"),
-              backgroundColor: AppColors.success,
-            ),
+          // إرسال التحديث للسيرفر للمنطقة الأولى (Zone 1)
+          final success1 = await _automationService.updateFarmingSettings(
+            widget.zone1.id, 
+            isAutoModeOn, 
+            _zone1MoistureThreshold
           );
+
+          // إرسال التحديث للسيرفر للمنطقة الثانية (Zone 2)
+          final success2 = await _automationService.updateFarmingSettings(
+            widget.zone2.id, 
+            isAutoModeOn, 
+            _zone2MoistureThreshold
+          );
+
+          setState(() => _isSaving = false);
+
+          if (success1 || success2) {
+            if (mounted) {
+              Navigator.pop(context, {
+                'zone1': {
+                  'plant': _zone1Plant,
+                  'threshold': _zone1MoistureThreshold,
+                },
+                'zone2': {
+                  'plant': _zone2Plant,
+                  'threshold': _zone2MoistureThreshold,
+                },
+                'autoMode': isAutoModeOn,
+                'manualMode': isManualIrrigationOn,
+              });
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Settings synced to server successfully! 🚀"),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Failed to sync settings. Try again."),
+                  backgroundColor: AppColors.danger,
+                ),
+              );
+            }
+          }
         },
-        icon: const Icon(Icons.sync_rounded),
-        label: const Text(
-          "SAVE & APPLY SETTINGS",
-          style: TextStyle(fontWeight: FontWeight.w900),
+        icon: _isSaving 
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppColors.textDark, strokeWidth: 2))
+            : const Icon(Icons.sync_rounded),
+        label: Text(
+          _isSaving ? "SAVING..." : "SAVE & APPLY SETTINGS",
+          style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryNeon,
@@ -499,4 +573,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-}
+}
