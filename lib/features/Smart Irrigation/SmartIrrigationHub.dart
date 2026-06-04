@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/theme/app_colors.dart';
 import 'package:smart_village_for_green_gnergy_optimization/core/services/sensor_service.dart';
 import 'dart:async';
+import 'package:smart_village_for_green_gnergy_optimization/core/services/device_service.dart';
 
-
-
-// استيراد كافة الملفات المطلوبة للربط
 import 'AlertsScreen.dart';
 import 'SettingsScreen.dart';
 import 'WeatherScreen.dart';
@@ -22,9 +20,9 @@ class SmartIrrigationHub extends StatefulWidget {
 
 class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
   final SensorService _sensorService = SensorService();
+  final DeviceService _deviceService = DeviceService();
   Timer? _timer;
 
-  // متغيرات حالة النظام
   double temp = 23.0;
   double humidity = 35.0;
   int waterLevel = 43;
@@ -33,33 +31,27 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
   bool emergencyStop = false;
   bool isRaining = false;
 
-  
-  // الزونات
   IrrigationZone zone1 = IrrigationZone(
     id: 'zone1',
     name: 'Zone 1',
     soilMoisture: 55.0,
     valveOpen: false,
   );
-  
+
   IrrigationZone zone2 = IrrigationZone(
     id: 'zone2',
     name: 'Zone 2',
     soilMoisture: 48.0,
     valveOpen: false,
   );
-  
-  // فالف الخزان
+
   bool tankValveOpen = false;
-  
-  // نوع النبات المختار
   PlantType? selectedPlant;
 
   @override
   void initState() {
     super.initState();
     _fetchData();
-    // تحديث البيانات كل 10 ثوانٍ
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) => _fetchData());
   }
 
@@ -70,8 +62,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
   }
 
   Future<void> _fetchData() async {
-    // جلب قراءات كل الحساسات في المنطقة (Zone 1 كمثال) من السيرفر بطلب واحد
-    final readings = await _sensorService.getLatestReadings(1);
+    final readings = await _sensorService.getLatestReadings(2);
 
     if (mounted) {
       setState(() {
@@ -85,7 +76,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
           } else if (type == 'WaterLevel' || type == '4') {
             waterLevel = value.toInt();
           } else if (type == 'SoilMoisture' || type == '2') {
-            // تفريق الرطوبة حسب اسم الجهاز (أو يمكن عبر DeviceId)
             if (deviceName.contains('Zone 1')) {
               zone1 = IrrigationZone(
                 id: zone1.id, name: zone1.name, soilMoisture: value, valveOpen: zone1.valveOpen,
@@ -101,15 +91,9 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     }
   }
 
-  Future<void> _updateSensor(int deviceId, int type, double value) async {
-    // محاكاة إرسال قراءة جديدة (ESP32 Simulation)
-    await _sensorService.recordReading(
-      deviceId: deviceId,
-      type: type,
-      value: value,
-    );
+  Future<void> _controlDevice(int deviceId, bool isOn) async {
+    await _deviceService.controlDevice(deviceId, isOn ? 'ON' : 'OFF');
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +104,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
       hour: DateTime.now().hour,
       isRaining: isRaining,
     );
-    
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBg,
       body: Stack(
@@ -135,11 +119,9 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                   _buildHeader(),
                   const SizedBox(height: 25),
 
-                  // Emergency Stop Banner
                   if (emergencyStop)
                     _buildEmergencyBanner(),
 
-                  // 1. نظام التنبيهات
                   if (waterLevel <= 20 || emergencyStop)
                     GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AlertsScreen())),
@@ -148,36 +130,30 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
 
                   const SizedBox(height: 20),
 
-                  // Eco Score
                   _buildEcoScoreCard(ecoScore),
-                  
+
                   const SizedBox(height: 15),
 
-                  // AI Recommendation
                   _buildAIRecommendationCard(aiRecommendation),
 
                   const SizedBox(height: 20),
 
-                  // 2. كارت الإحصائيات الرئيسية
                   _buildMainStatsGrid(),
 
                   const SizedBox(height: 25),
                   _buildSectionTitle("Irrigation Zones"),
                   const SizedBox(height: 15),
 
-                  // الزونات
                   _buildZonesGrid(),
 
                   const SizedBox(height: 25),
                   _buildSectionTitle("System Control"),
                   const SizedBox(height: 15),
 
-                  // 3. التحكم بالمضخة والفالفات
                   _buildControlGrid(),
 
                   const SizedBox(height: 30),
 
-                  // 4. كروت التنقل للصفحات التفصيلية
                   _buildNavigationCards(),
                   const SizedBox(height: 50),
                 ],
@@ -189,24 +165,21 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-  // دالة بناء كروت التنقل المربوطة فعلياً
   Widget _buildNavigationCards() {
     return Column(
       children: [
-        // ربط صفحة الطقس
         _buildNavCard(
           "Weather Analysis",
           "Local garden forecast",
           Icons.cloud_queue,
-          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const WeatherScreen())),
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const WeatherScreen())),
         ),
         const SizedBox(height: 15),
-        // ربط صفحة الإعدادات
         _buildNavCard(
           "System Settings",
           "Moisture & Thresholds",
           Icons.settings_suggest,
-          () async {
+              () async {
             final result = await Navigator.push(
               context,
               MaterialPageRoute(
@@ -217,26 +190,22 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
               ),
             );
             if (result != null) {
-              // تطبيق الإعدادات المرجعة
               setState(() {
-                // يمكن تحديث الزونات هنا إذا لزم الأمر
               });
             }
           },
         ),
         const SizedBox(height: 15),
-        // صفحة السجلات
         _buildNavCard(
           "Irrigation Logs",
           "View history & analytics",
           Icons.history,
-          () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IrrigationLogsPage())),
+              () => Navigator.push(context, MaterialPageRoute(builder: (context) => const IrrigationLogsPage())),
         ),
       ],
     );
   }
 
-  // Emergency Stop Banner
   Widget _buildEmergencyBanner() {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -290,7 +259,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-  // Eco Score Card
   Widget _buildEcoScoreCard(double score) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -338,7 +306,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-  // AI Recommendation Card
   Widget _buildAIRecommendationCard(String recommendation) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -382,7 +349,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-  // Zones Grid
   Widget _buildZonesGrid() {
     return Row(
       children: [
@@ -471,11 +437,9 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-  // دالة التحكم بالمضخة والفالفات
   Widget _buildControlGrid() {
     return Column(
       children: [
-        // صف المضخة والطوارئ
         Row(
           children: [
             Expanded(
@@ -483,10 +447,10 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 "Pump",
                 isPumpOn && !emergencyStop,
                 Icons.water_drop,
-                (v) {
+                    (v) {
                   if (!emergencyStop) {
                     setState(() => isPumpOn = v);
-                    _updateSensor(101, 1, v ? 1.0 : 0.0);
+                    _controlDevice(6, v);
                   }
                 },
 
@@ -499,7 +463,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
           ],
         ),
         const SizedBox(height: 15),
-        // صف الإضاءة وفالف الخزان
         Row(
           children: [
             Expanded(
@@ -507,10 +470,10 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 "Garden Lights",
                 gardenLight && !emergencyStop,
                 Icons.lightbulb,
-                (v) {
+                    (v) {
                   if (!emergencyStop) {
                     setState(() => gardenLight = v);
-                    _updateSensor(102, 2, v ? 1.0 : 0.0);
+                    _controlDevice(1, v);
                   }
                 },
               ),
@@ -522,10 +485,10 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
                 "Tank Valve",
                 tankValveOpen && !emergencyStop,
                 Icons.settings_input_component,
-                (v) {
+                    (v) {
                   if (!emergencyStop) {
                     setState(() => tankValveOpen = v);
-                    _updateSensor(103, 3, v ? 1.0 : 0.0);
+                    _controlDevice(103, v);
                   }
                 },
               ),
@@ -536,17 +499,15 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
     );
   }
 
-
   Widget _buildEmergencyStopTile() {
     return GestureDetector(
       onTap: () {
         setState(() {
           emergencyStop = !emergencyStop;
           if (emergencyStop) {
-            // إيقاف كل شيء بما فيه Tank Valve
             isPumpOn = false;
             gardenLight = false;
-            tankValveOpen = false; // إضافة إيقاف Tank Valve
+            tankValveOpen = false;
             zone1 = IrrigationZone(
               id: zone1.id,
               name: zone1.name,
@@ -563,7 +524,7 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
             );
           }
         });
-        
+
         if (emergencyStop) {
           showDialog(
             context: context,
@@ -632,8 +593,6 @@ class _SmartIrrigationHubState extends State<SmartIrrigationHub> {
       ),
     );
   }
-
-  // --- دوائر التصميم الأساسية المسؤولة عن المظهر ---
 
   Widget _buildGradientBackground() => Container(decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: AppColors.mainGradient)));
 

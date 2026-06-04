@@ -2,20 +2,19 @@ class ApiConstants {
   // 💡 غيري هذه القيمة فقط:
   // true = يشتغل على السيرفر المحلي (الكمبيوتر بتاعك)
   // false = يشتغل على الاستضافة الأونلاين (runasp.net)
-  static const bool useLocal = true; 
+  static const bool useLocal =false;
 
-  // 🏠 إعدادات السيرفر المحلي (Local)
-  static const String localIp = '192.168.1.2'; // ⚠️ تأكدي من الـ IP بتاع جهازك
-  static const String localBaseUrl = 'http://$localIp:5000/api';
-  static const String localMediaUrl = 'http://$localIp:5248/recordings';
+// 🏠 إعدادات السيرفر المحلي (Local)
+  static const String localIp = '192.168.1.58'; // تأكدي من أن الـ IP لم يتغير
+  static const String localBaseUrl = 'http://$localIp:5248/api'; // 💡 تم التعديل هنا إلى 5248
+  static const String localMediaUrl = 'http://$localIp:5248/recordings'; // هذا البورت صحيح
   static const String localLiveUrl = 'http://$localIp:8888';
 
   // 🌐 إعدادات الاستضافة الأونلاين (Hosted)
-  static const String hostedDomain = 'smartvillages.runasp.net';
-  static const String hostedBaseUrl = 'https://$hostedDomain/api';
-  static const String hostedMediaUrl = 'https://$hostedDomain/recordings';
+  static const String hostedDomain = 'smartvillageapi.runasp.net';
+  static const String hostedBaseUrl = 'http://$hostedDomain/api';
+  static const String hostedMediaUrl = 'http://$hostedDomain/recordings';
   static const String hostedLiveUrl = 'http://$hostedDomain:8888';
-
   // 🚀 الإعدادات النشطة (تتغير تلقائياً بناءً على useLocal)
   static const String baseUrl = useLocal ? localBaseUrl : hostedBaseUrl;
   static const String mediaBaseUrl = useLocal ? localMediaUrl : hostedMediaUrl;

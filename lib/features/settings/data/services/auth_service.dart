@@ -21,7 +21,10 @@ class AuthService {
     try {
       final response = await client.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', // 👈 تم إضافة السطر هنا
+        },
         body: body,
       );
 
@@ -60,7 +63,10 @@ class AuthService {
     try {
       final response = await client.post(
         Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', // 👈 وتمت إضافته هنا أيضاً
+        },
         body: body,
       );
 
@@ -253,10 +259,6 @@ class AuthService {
   }
 
   // بنمسح التوكن لما اليوزر يعمل خروج
-
-
-
-
   Future<void> logout() async {
     final url = ApiConstants.logoutEndpoint;
     final token = await getToken();

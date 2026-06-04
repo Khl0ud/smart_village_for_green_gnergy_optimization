@@ -33,9 +33,10 @@ class LoginRequest {
 
   LoginRequest({required this.email, required this.password});
 
+  // 💡 تم تعديل المفاتيح هنا لتبدأ بحرف كبير
   Map<String, dynamic> toJson() => {
-    'email': email,
-    'password': password,
+    'Email': email,
+    'Password': password,
   };
 }
 
@@ -50,9 +51,10 @@ class RegisterRequest {
     required this.fullName,
   });
 
+  // 💡 تم تعديل المفاتيح هنا لتطابق السيرفر تماماً
   Map<String, dynamic> toJson() => {
-    'email': email,
-    'password': password,
-    'fullName': fullName,
+    'Email': email,
+    'Password': password,
+    'FullName': fullName,
   };
 }

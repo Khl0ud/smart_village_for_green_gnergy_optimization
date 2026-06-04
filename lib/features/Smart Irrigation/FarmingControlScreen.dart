@@ -42,8 +42,8 @@ class _FarmingControlScreenState extends State<FarmingControlScreen> {
   Future<void> _fetchData() async {
     // جلب البيانات من المنطقة 2 (عادة ما تكون للحديقة) أو 1 حسب توزيع المشروع
     // سأقوم بجلب بيانات المنطقة 1 و 2 لضمان الحصول على البيانات
-    final sensorReadings = await _sensorService.getLatestReadings(1);
-    final devices = await _deviceService.getDevicesByZone(1);
+    final sensorReadings = await _sensorService.getLatestReadings(2);
+    final devices = await _deviceService.getDevicesByZone(2);
 
     if (mounted) {
       setState(() {
