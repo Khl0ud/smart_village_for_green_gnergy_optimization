@@ -136,7 +136,7 @@ class _LiveStatusBannerState extends State<LiveStatusBanner> {
 
   Future<void> _fetchStatus() async {
     final cameras = await _cameraService.getAllCameras();
-    if (mounted) {
+    if (mounted){
       setState(() {
         _total = cameras.length;
         _online = cameras

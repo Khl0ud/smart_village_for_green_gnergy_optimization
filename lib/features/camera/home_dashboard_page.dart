@@ -33,7 +33,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   Future<void> _fetchCameras() async {
     final cameras = await _cameraService.getAllCameras();
-    if (mounted) {
+    if (mounted){
       setState(() {
         _cameras = cameras;
         _isLoadingCameras = false;

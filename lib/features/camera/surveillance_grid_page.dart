@@ -94,7 +94,7 @@ class _SurveillanceGridPageState extends State<SurveillanceGridPage> {
                       final location = camera['location'] ?? 'Public';
                       final streamUrl = camera['streamUrl'] ?? '';
 
-                      return _ImageCard(
+                      return _ImageCard (
                         title: name,
                         subtitle: location,
                         assetPath: 'assets/gate.png', // Default image or use from server if available
@@ -255,4 +255,4 @@ class _ImageCard extends StatelessWidget {
       ),
     );
   }
-}
+}
